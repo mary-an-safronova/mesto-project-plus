@@ -15,7 +15,7 @@ app.use(express.urlencoded({ extended: true }));
 
 //Временное решение авторизации пользователя
 app.use((req: Request, res: Response, next: NextFunction) => {
-  req.body.user = { _id: '652aacbb5eac8f2840ea61d4' };
+  req.body.user = { _id: '652be5362b8a4111f253f4d0' };
   next();
 });
 
