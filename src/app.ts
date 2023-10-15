@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import usersRouter from './routes/user';
 import cardsRouter from './routes/card';
+import { Request, Response, NextFunction } from 'express';
 
 const { PORT = 3000 } = process.env;
 
@@ -12,9 +13,9 @@ mongoose.connect('mongodb://localhost:27017/mestodb');
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use((req, res, next) => {
-  req.body.user = { _id: '5d8b8592978f8bd833ca8133' };
-
+//Временное решение авторизации пользователя
+app.use((req: Request, res: Response, next: NextFunction) => {
+  req.body.user = { _id: '652aacbb5eac8f2840ea61d4' };
   next();
 });
 

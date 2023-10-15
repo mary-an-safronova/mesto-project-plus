@@ -8,7 +8,7 @@ interface ICard {
   createdAt: Date;
 }
 
-// Создание схемы юзера
+// Схема карточки
 const cardSchema = new Schema<ICard>({
   name: {
     type: String,
@@ -36,5 +36,5 @@ const cardSchema = new Schema<ICard>({
   }
 });
 
-// Создание и экспорт модели юзера
+// Модель карточки
 export default model<ICard>('card', cardSchema);

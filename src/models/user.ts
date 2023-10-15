@@ -6,7 +6,7 @@ interface IUser {
   avatar: string;
 }
 
-// Создание схемы юзера
+// Схема пользователя
 const userSchema = new Schema<IUser>({
   name: {
     type: String,
@@ -26,5 +26,5 @@ const userSchema = new Schema<IUser>({
   }
 });
 
-// Создание и экспорт модели юзера
+// Модель пользователя
 export default model<IUser>('user', userSchema);
