@@ -37,7 +37,7 @@ export const getCards = (req: Request, res: Response) => Card
 // Создание новой карточки
 export const createCard = (req: Request, res: Response) => {
   const { name, link } = req.body;
-  const userId = req.body.user._id;
+  const userId = req.user._id;
 
   return Card
     .create({ name, link, owner: userId })
@@ -91,7 +91,7 @@ export const deleteCard = (req: Request, res: Response) => {
 // Добавление лайка карточке
 export const likeCard = (req: Request, res: Response) => {
   const { cardId } = req.params;
-  const userId = req.body.user._id;
+  const userId = req.user._id;
 
   return Card
     .findByIdAndUpdate(
@@ -132,7 +132,7 @@ export const likeCard = (req: Request, res: Response) => {
 // Удаление лайка у карточки
 export const dislikeCard = (req: Request, res: Response) => {
   const { cardId } = req.params;
-  const userId = req.body.user._id;
+  const userId = req.user._id;
 
   return Card
     .findByIdAndUpdate(

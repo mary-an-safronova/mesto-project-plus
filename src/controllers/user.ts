@@ -67,10 +67,10 @@ export const createUser = (req: Request, res: Response) => {
 // Изменение значений полей name и about пользователя
 export const updateUserInfo = (req: Request, res: Response) => {
   const { name, about } = req.body;
-  const userId = req.body.user._id;
+  const userId = req.user._id;
 
   return User
-    .findByIdAndUpdate(userId, { name, about }, { new: true })
+    .findByIdAndUpdate(userId, { name, about }, { new: true, runValidators: true })
     .select('name about avatar _id') // Поля, включенные в результат ответа
     .then((user) => {
       if (!user) {
@@ -85,9 +85,7 @@ export const updateUserInfo = (req: Request, res: Response) => {
       }
     })
     .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(ERROR_STATUS.BadRequest).send({ message: ERROR_MESSAGE.IncorrectId });
-      } else if (err.name === 'ValidationError') {
+      if (err.name === 'ValidationError') {
         res.status(ERROR_STATUS.BadRequest).send({ message: err.message });
       } else {
         res.status(ERROR_STATUS.InternalServerError).send({ message: err.message });
@@ -98,10 +96,10 @@ export const updateUserInfo = (req: Request, res: Response) => {
 // Изменение значения поля avatar пользователя
 export const updateUserAvatar = (req: Request, res: Response) => {
   const { avatar } = req.body;
-  const userId = req.body.user._id;
+  const userId = req.user._id;
 
   return User
-    .findByIdAndUpdate(userId, { avatar }, { new: true })
+    .findByIdAndUpdate(userId, { avatar }, { new: true, runValidators: true })
     .select('name about avatar _id') // Поля, включенные в результат ответа
     .then((user) => {
       if (!user) {

@@ -4,6 +4,14 @@ import usersRouter from './routes/user';
 import cardsRouter from './routes/card';
 import { Request, Response, NextFunction } from 'express';
 
+declare global {
+  namespace Express {
+    interface Request {
+      user: { _id: string };
+    }
+  }
+}
+
 const { PORT = 3000 } = process.env;
 
 const app = express();
@@ -15,7 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 
 //Временное решение авторизации пользователя
 app.use((req: Request, res: Response, next: NextFunction) => {
-  req.body.user = { _id: '652be5362b8a4111f253f4d0' };
+  req.user = { _id: '652be5362b8a4111f253f4d0' };
   next();
 });
 
