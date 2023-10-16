@@ -1,4 +1,4 @@
-import { Schema, model, Types } from "mongoose";
+import { Schema, model, Types } from 'mongoose';
 
 interface ICard {
   _id: Types.ObjectId | string;
@@ -24,18 +24,18 @@ const cardSchema = new Schema<ICard>({
   owner: {
     type: Schema.Types.ObjectId,
     ref: 'user',
-    required: true
+    required: true,
   },
   likes: {
-    type: [ Schema.Types.ObjectId ],
+    type: [Schema.Types.ObjectId],
     default: [],
-    ref: "user",
+    ref: 'user',
   },
   createdAt: {
     type: Date,
     default: Date.now,
-  }
-}, { versionKey: false });  // Исключаем поле "__v"
+  },
+}, { versionKey: false }); // Исключаем поле "__v"
 
 // Модель карточки
 export default model<ICard>('card', cardSchema);

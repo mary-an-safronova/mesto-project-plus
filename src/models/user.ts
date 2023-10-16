@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema, model } from 'mongoose';
 
 export interface IUser {
   name: string;
@@ -24,7 +24,7 @@ const userSchema = new Schema<IUser>({
     type: String,
     required: true,
   },
-}, { versionKey: false });  // Исключаем поле "__v"
+}, { versionKey: false }); // Исключаем поле "__v"
 
 // Модель пользователя
 export default model<IUser>('user', userSchema);

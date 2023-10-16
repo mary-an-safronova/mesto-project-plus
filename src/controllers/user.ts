@@ -3,24 +3,22 @@ import User from '../models/user';
 import { ERROR_STATUS, ERROR_MESSAGE } from '../utils/constants/errors';
 
 // Получение всех пользовтелей
-export const getUsers = (req: Request, res: Response) => {
-  return User
-    .find({})
-    .select('name about avatar _id') // Поля, включенные в результат ответа
-    .then(users => {
-      const updatedUsers = users.map((user: any) => {
-        const updatedUser = {
-          name: user?.name,
-          about: user?.about,
-          avatar: user?.avatar,
-          _id: user?._id
-        };
-        return updatedUser;
-      });
-      res.send(updatedUsers);
-    })
-    .catch(() => res.status(ERROR_STATUS.InternalServerError).send({ message: ERROR_MESSAGE.Error }));
-}
+export const getUsers = (req: Request, res: Response) => User.find({})
+  .select('name about avatar _id') // Поля, включенные в результат ответа
+  .then((users) => {
+    const updatedUsers = users.map((user: any) => {
+      const updatedUser = {
+        name: user?.name,
+        about: user?.about,
+        avatar: user?.avatar,
+        _id: user?._id,
+      };
+      return updatedUser;
+    });
+    res.send(updatedUsers);
+  })
+  .catch(() => res.status(ERROR_STATUS.InternalServerError)
+    .send({ message: ERROR_MESSAGE.Error }));
 
 // Получение одного пользователя по id
 export const getUser = (req: Request, res: Response) => {
@@ -29,7 +27,7 @@ export const getUser = (req: Request, res: Response) => {
   return User
     .findById(userId)
     .select('name about avatar _id') // Поля, включенные в результат ответа
-    .then(user => {
+    .then((user) => {
       if (!user) {
         res.status(ERROR_STATUS.NotFound).send({ message: ERROR_MESSAGE.UserNotFound });
       } else {
@@ -37,7 +35,7 @@ export const getUser = (req: Request, res: Response) => {
           name: user?.name,
           about: user?.about,
           avatar: user?.avatar,
-          _id: user?._id
+          _id: user?._id,
         });
       }
     })
@@ -45,10 +43,10 @@ export const getUser = (req: Request, res: Response) => {
       if (err.name === 'CastError') {
         res.status(ERROR_STATUS.BadRequest).send({ message: ERROR_MESSAGE.IncorrectId });
       } else {
-        res.status(ERROR_STATUS.InternalServerError).send({ message: ERROR_MESSAGE.Error })
+        res.status(ERROR_STATUS.InternalServerError).send({ message: ERROR_MESSAGE.Error });
       }
     });
-}
+};
 
 // Создание нового пользователя
 export const createUser = (req: Request, res: Response) => {
@@ -56,12 +54,12 @@ export const createUser = (req: Request, res: Response) => {
 
   User
     .create({ name, about, avatar })
-    .then(user => res.send(user))
+    .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(ERROR_STATUS.BadRequest).send({ message: err.message });
       } else {
-        res.status(ERROR_STATUS.InternalServerError).send({ message: err.message })
+        res.status(ERROR_STATUS.InternalServerError).send({ message: err.message });
       }
     });
 };
@@ -74,7 +72,7 @@ export const updateUserInfo = (req: Request, res: Response) => {
   return User
     .findByIdAndUpdate(userId, { name, about }, { new: true })
     .select('name about avatar _id') // Поля, включенные в результат ответа
-    .then(user => {
+    .then((user) => {
       if (!user) {
         res.status(ERROR_STATUS.NotFound).send({ message: ERROR_MESSAGE.UserNotFound });
       } else {
@@ -82,7 +80,7 @@ export const updateUserInfo = (req: Request, res: Response) => {
           name: user?.name,
           about: user?.about,
           avatar: user?.avatar,
-          _id: user?._id
+          _id: user?._id,
         });
       }
     })
@@ -92,7 +90,7 @@ export const updateUserInfo = (req: Request, res: Response) => {
       } else if (err.name === 'ValidationError') {
         res.status(ERROR_STATUS.BadRequest).send({ message: err.message });
       } else {
-        res.status(ERROR_STATUS.InternalServerError).send({ message: err.message })
+        res.status(ERROR_STATUS.InternalServerError).send({ message: err.message });
       }
     });
 };
@@ -105,7 +103,7 @@ export const updateUserAvatar = (req: Request, res: Response) => {
   return User
     .findByIdAndUpdate(userId, { avatar }, { new: true })
     .select('name about avatar _id') // Поля, включенные в результат ответа
-    .then(user => {
+    .then((user) => {
       if (!user) {
         res.status(ERROR_STATUS.NotFound).send({ message: ERROR_MESSAGE.UserNotFound });
       } else {
@@ -113,7 +111,7 @@ export const updateUserAvatar = (req: Request, res: Response) => {
           name: user?.name,
           about: user?.about,
           avatar: user?.avatar,
-          _id: user?._id
+          _id: user?._id,
         });
       }
     })
@@ -121,7 +119,7 @@ export const updateUserAvatar = (req: Request, res: Response) => {
       if (err.name === 'ValidationError') {
         res.status(ERROR_STATUS.BadRequest).send({ message: err.message });
       } else {
-        res.status(ERROR_STATUS.InternalServerError).send({ message: err.message })
+        res.status(ERROR_STATUS.InternalServerError).send({ message: err.message });
       }
     });
 };
