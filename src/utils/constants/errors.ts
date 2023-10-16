@@ -5,9 +5,9 @@ export const ERROR_STATUS = {
 }
 
 export const ERROR_MESSAGE = {
-  UserNotFound: 'Пользователь не найден',
-  CardNotFound: 'Карточка не найдена',
+  UserNotFound: 'Пользователь не найден или был запрошен несуществующий роут',
+  CardNotFound: 'Карточка не найдена или был запрошен несуществующий роут',
   CardIsDelete: 'Карточка успешно удалена',
-  IncorrectId: 'Передан некорректный id',
-  Error: 'Произошла ошибка'
+  IncorrectId: 'Переданы некорректные данные',
+  Error: 'На сервере произошла ошибка'
 }
