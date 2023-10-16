@@ -4,8 +4,8 @@ interface ICard {
   _id: Types.ObjectId | string;
   name: string;
   link: string;
-  owner: Types.ObjectId;
-  likes: Types.ObjectId[];
+  owner: Schema.Types.ObjectId;
+  likes: Schema.Types.ObjectId[];
   createdAt: Date;
 }
 
@@ -27,15 +27,15 @@ const cardSchema = new Schema<ICard>({
     required: true
   },
   likes: {
-    type: [Schema.Types.ObjectId],
+    type: [ Schema.Types.ObjectId ],
     default: [],
-    ref: "User",
+    ref: "user",
   },
   createdAt: {
     type: Date,
     default: Date.now,
   }
-});
+}, { versionKey: false });  // Исключаем поле "__v"
 
 // Модель карточки
 export default model<ICard>('card', cardSchema);

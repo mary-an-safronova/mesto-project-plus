@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
 
-interface IUser {
+export interface IUser {
   name: string;
   about: string;
   avatar: string;
@@ -23,8 +23,8 @@ const userSchema = new Schema<IUser>({
   avatar: {
     type: String,
     required: true,
-  }
-});
+  },
+}, { versionKey: false });  // Исключаем поле "__v"
 
 // Модель пользователя
 export default model<IUser>('user', userSchema);

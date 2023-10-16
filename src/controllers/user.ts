@@ -6,7 +6,19 @@ import { ERROR_STATUS, ERROR_MESSAGE } from '../utils/constants/errors';
 export const getUsers = (req: Request, res: Response) => {
   return User
     .find({})
-    .then(users => res.send(users))
+    .select('name about avatar _id') // Поля, включенные в результат ответа
+    .then(users => {
+      const updatedUsers = users.map((user: any) => {
+        const updatedUser = {
+          name: user?.name,
+          about: user?.about,
+          avatar: user?.avatar,
+          _id: user?._id
+        };
+        return updatedUser;
+      });
+      res.send(updatedUsers);
+    })
     .catch(() => res.status(ERROR_STATUS.InternalServerError).send({ message: ERROR_MESSAGE.Error }));
 }
 
@@ -16,11 +28,17 @@ export const getUser = (req: Request, res: Response) => {
 
   return User
     .findById(userId)
+    .select('name about avatar _id') // Поля, включенные в результат ответа
     .then(user => {
       if (!user) {
         res.status(ERROR_STATUS.NotFound).send({ message: ERROR_MESSAGE.UserNotFound });
       } else {
-        res.send(user);
+        res.send({
+          name: user?.name,
+          about: user?.about,
+          avatar: user?.avatar,
+          _id: user?._id
+        });
       }
     })
     .catch((err) => {
@@ -36,7 +54,7 @@ export const getUser = (req: Request, res: Response) => {
 export const createUser = (req: Request, res: Response) => {
   const { name, about, avatar } = req.body;
 
-  return User
+  User
     .create({ name, about, avatar })
     .then(user => res.send(user))
     .catch((err) => {
@@ -55,7 +73,15 @@ export const updateUserInfo = (req: Request, res: Response) => {
 
   return User
     .findByIdAndUpdate(userId, { name, about }, { new: true })
-    .then(user => res.send(user))
+    .select('name about avatar _id') // Поля, включенные в результат ответа
+    .then(user => {
+      res.send({
+        name: user?.name,
+        about: user?.about,
+        avatar: user?.avatar,
+        _id: user?._id
+      });
+    })
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(ERROR_STATUS.BadRequest).send({ message: err.message });
@@ -72,7 +98,15 @@ export const updateUserAvatar = (req: Request, res: Response) => {
 
   return User
     .findByIdAndUpdate(userId, { avatar }, { new: true })
-    .then(user => res.send(user))
+    .select('name about avatar _id') // Поля, включенные в результат ответа
+    .then(user => {
+      res.send({
+        name: user?.name,
+        about: user?.about,
+        avatar: user?.avatar,
+        _id: user?._id
+      });
+    })
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(ERROR_STATUS.BadRequest).send({ message: err.message });
