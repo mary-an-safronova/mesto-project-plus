@@ -75,15 +75,21 @@ export const updateUserInfo = (req: Request, res: Response) => {
     .findByIdAndUpdate(userId, { name, about }, { new: true })
     .select('name about avatar _id') // Поля, включенные в результат ответа
     .then(user => {
-      res.send({
-        name: user?.name,
-        about: user?.about,
-        avatar: user?.avatar,
-        _id: user?._id
-      });
+      if (!user) {
+        res.status(ERROR_STATUS.NotFound).send({ message: ERROR_MESSAGE.UserNotFound });
+      } else {
+        res.send({
+          name: user?.name,
+          about: user?.about,
+          avatar: user?.avatar,
+          _id: user?._id
+        });
+      }
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
+        res.status(ERROR_STATUS.BadRequest).send({ message: ERROR_MESSAGE.IncorrectId });
+      } else if (err.name === 'ValidationError') {
         res.status(ERROR_STATUS.BadRequest).send({ message: err.message });
       } else {
         res.status(ERROR_STATUS.InternalServerError).send({ message: err.message })
@@ -100,12 +106,16 @@ export const updateUserAvatar = (req: Request, res: Response) => {
     .findByIdAndUpdate(userId, { avatar }, { new: true })
     .select('name about avatar _id') // Поля, включенные в результат ответа
     .then(user => {
-      res.send({
-        name: user?.name,
-        about: user?.about,
-        avatar: user?.avatar,
-        _id: user?._id
-      });
+      if (!user) {
+        res.status(ERROR_STATUS.NotFound).send({ message: ERROR_MESSAGE.UserNotFound });
+      } else {
+        res.send({
+          name: user?.name,
+          about: user?.about,
+          avatar: user?.avatar,
+          _id: user?._id
+        });
+      }
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
