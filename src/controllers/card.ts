@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import Card from '../models/card';
-import { ERROR_STATUS, ERROR_MESSAGE } from '../utils/constants/errors';
+import { STATUS_CODE, ERROR_MESSAGE } from '../utils/constants/errors';
 
 // Получение всех карточек
 export const getCards = (req: Request, res: Response) => Card
@@ -32,7 +32,7 @@ export const getCards = (req: Request, res: Response) => Card
     });
     res.send(updatedCards);
   })
-  .catch(() => res.status(ERROR_STATUS.InternalServerError).send({ message: ERROR_MESSAGE.Error }));
+  .catch(() => res.status(STATUS_CODE.InternalServerError).send({ message: ERROR_MESSAGE.Error }));
 
 // Создание новой карточки
 export const createCard = (req: Request, res: Response) => {
@@ -53,15 +53,15 @@ export const createCard = (req: Request, res: Response) => {
           owner: createdCard?.owner,
           _id: createdCard?._id,
         };
-        res.send(response);
+        res.status(STATUS_CODE.Created).send(response);
       })
-      .catch(() => res.status(ERROR_STATUS.InternalServerError)
+      .catch(() => res.status(STATUS_CODE.InternalServerError)
         .send({ message: ERROR_MESSAGE.Error })))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(ERROR_STATUS.BadRequest).send({ message: err.message });
+        res.status(STATUS_CODE.BadRequest).send({ message: err.message });
       } else {
-        res.status(ERROR_STATUS.InternalServerError).send({ message: err.message });
+        res.status(STATUS_CODE.InternalServerError).send({ message: err.message });
       }
     });
 };
@@ -76,14 +76,14 @@ export const deleteCard = (req: Request, res: Response) => {
       if (card?._id !== undefined) {
         res.send({ message: ERROR_MESSAGE.CardIsDelete });
       } else {
-        res.status(ERROR_STATUS.NotFound).send({ message: ERROR_MESSAGE.CardNotFound });
+        res.status(STATUS_CODE.NotFound).send({ message: ERROR_MESSAGE.CardNotFound });
       }
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(ERROR_STATUS.BadRequest).send({ message: ERROR_MESSAGE.IncorrectId });
+        res.status(STATUS_CODE.BadRequest).send({ message: ERROR_MESSAGE.IncorrectId });
       } else {
-        res.status(ERROR_STATUS.InternalServerError).send({ message: ERROR_MESSAGE.Error });
+        res.status(STATUS_CODE.InternalServerError).send({ message: ERROR_MESSAGE.Error });
       }
     });
 };
@@ -118,13 +118,13 @@ export const likeCard = (req: Request, res: Response) => {
           _id: card?._id,
         });
       }
-      return res.status(ERROR_STATUS.NotFound).send({ message: ERROR_MESSAGE.CardNotFound });
+      return res.status(STATUS_CODE.NotFound).send({ message: ERROR_MESSAGE.CardNotFound });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(ERROR_STATUS.BadRequest).send({ message: ERROR_MESSAGE.IncorrectId });
+        res.status(STATUS_CODE.BadRequest).send({ message: ERROR_MESSAGE.IncorrectId });
       } else {
-        res.status(ERROR_STATUS.InternalServerError).send({ message: ERROR_MESSAGE.Error });
+        res.status(STATUS_CODE.InternalServerError).send({ message: ERROR_MESSAGE.Error });
       }
     });
 };
@@ -158,13 +158,13 @@ export const dislikeCard = (req: Request, res: Response) => {
             return res.send(response);
           });
       }
-      return res.status(ERROR_STATUS.NotFound).send({ message: ERROR_MESSAGE.CardNotFound });
+      return res.status(STATUS_CODE.NotFound).send({ message: ERROR_MESSAGE.CardNotFound });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(ERROR_STATUS.BadRequest).send({ message: ERROR_MESSAGE.IncorrectId });
+        res.status(STATUS_CODE.BadRequest).send({ message: ERROR_MESSAGE.IncorrectId });
       } else {
-        res.status(ERROR_STATUS.InternalServerError).send({ message: ERROR_MESSAGE.Error });
+        res.status(STATUS_CODE.InternalServerError).send({ message: ERROR_MESSAGE.Error });
       }
     });
 };

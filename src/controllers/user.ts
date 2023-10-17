@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import User from '../models/user';
-import { ERROR_STATUS, ERROR_MESSAGE } from '../utils/constants/errors';
+import { STATUS_CODE, ERROR_MESSAGE } from '../utils/constants/errors';
 
 // Получение всех пользовтелей
 export const getUsers = (req: Request, res: Response) => User.find({})
@@ -17,7 +17,7 @@ export const getUsers = (req: Request, res: Response) => User.find({})
     });
     res.send(updatedUsers);
   })
-  .catch(() => res.status(ERROR_STATUS.InternalServerError)
+  .catch(() => res.status(STATUS_CODE.InternalServerError)
     .send({ message: ERROR_MESSAGE.Error }));
 
 // Получение одного пользователя по id
@@ -29,7 +29,7 @@ export const getUser = (req: Request, res: Response) => {
     .select('name about avatar _id') // Поля, включенные в результат ответа
     .then((user) => {
       if (!user) {
-        res.status(ERROR_STATUS.NotFound).send({ message: ERROR_MESSAGE.UserNotFound });
+        res.status(STATUS_CODE.NotFound).send({ message: ERROR_MESSAGE.UserNotFound });
       } else {
         res.send({
           name: user?.name,
@@ -41,9 +41,9 @@ export const getUser = (req: Request, res: Response) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(ERROR_STATUS.BadRequest).send({ message: ERROR_MESSAGE.IncorrectId });
+        res.status(STATUS_CODE.BadRequest).send({ message: ERROR_MESSAGE.IncorrectId });
       } else {
-        res.status(ERROR_STATUS.InternalServerError).send({ message: ERROR_MESSAGE.Error });
+        res.status(STATUS_CODE.InternalServerError).send({ message: ERROR_MESSAGE.Error });
       }
     });
 };
@@ -54,12 +54,12 @@ export const createUser = (req: Request, res: Response) => {
 
   User
     .create({ name, about, avatar })
-    .then((user) => res.send(user))
+    .then((user) => res.status(STATUS_CODE.Created).send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(ERROR_STATUS.BadRequest).send({ message: err.message });
+        res.status(STATUS_CODE.BadRequest).send({ message: err.message });
       } else {
-        res.status(ERROR_STATUS.InternalServerError).send({ message: err.message });
+        res.status(STATUS_CODE.InternalServerError).send({ message: err.message });
       }
     });
 };
@@ -74,7 +74,7 @@ export const updateUserInfo = (req: Request, res: Response) => {
     .select('name about avatar _id') // Поля, включенные в результат ответа
     .then((user) => {
       if (!user) {
-        res.status(ERROR_STATUS.NotFound).send({ message: ERROR_MESSAGE.UserNotFound });
+        res.status(STATUS_CODE.NotFound).send({ message: ERROR_MESSAGE.UserNotFound });
       } else {
         res.send({
           name: user?.name,
@@ -86,9 +86,9 @@ export const updateUserInfo = (req: Request, res: Response) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(ERROR_STATUS.BadRequest).send({ message: err.message });
+        res.status(STATUS_CODE.BadRequest).send({ message: err.message });
       } else {
-        res.status(ERROR_STATUS.InternalServerError).send({ message: err.message });
+        res.status(STATUS_CODE.InternalServerError).send({ message: err.message });
       }
     });
 };
@@ -103,7 +103,7 @@ export const updateUserAvatar = (req: Request, res: Response) => {
     .select('name about avatar _id') // Поля, включенные в результат ответа
     .then((user) => {
       if (!user) {
-        res.status(ERROR_STATUS.NotFound).send({ message: ERROR_MESSAGE.UserNotFound });
+        res.status(STATUS_CODE.NotFound).send({ message: ERROR_MESSAGE.UserNotFound });
       } else {
         res.send({
           name: user?.name,
@@ -115,9 +115,9 @@ export const updateUserAvatar = (req: Request, res: Response) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(ERROR_STATUS.BadRequest).send({ message: err.message });
+        res.status(STATUS_CODE.BadRequest).send({ message: err.message });
       } else {
-        res.status(ERROR_STATUS.InternalServerError).send({ message: err.message });
+        res.status(STATUS_CODE.InternalServerError).send({ message: err.message });
       }
     });
 };
