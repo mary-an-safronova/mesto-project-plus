@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';
 import User from '../models/user';
 import { STATUS_CODE, ERROR_MESSAGE } from '../utils/constants/errors';
 
@@ -51,8 +52,20 @@ export const getUser = async (req: Request, res: Response) => {
 // Создание нового пользователя
 export const createUser = async (req: Request, res: Response) => {
   try {
-    const { name, about, avatar } = req.body;
-    const user = await User.create({ name, about, avatar });
+    const {
+      name, about, avatar, email, password,
+    } = req.body;
+
+    // Хеширование пароля
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await User.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hashedPassword,
+    });
     res.status(STATUS_CODE.Created).send(user);
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError) {
