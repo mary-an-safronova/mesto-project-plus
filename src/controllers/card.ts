@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import Card from '../models/card';
 import { STATUS_CODE, ERROR_MESSAGE } from '../utils/constants/errors';
+// import NotFoundError from '../utils/errors/not-found-error';
 
 // Получение всех карточек
 export const getCards = (req: Request, res: Response) => Card
@@ -69,19 +70,21 @@ export const createCard = (req: Request, res: Response) => {
 // Удаление карточки
 export const deleteCard = (req: Request, res: Response) => {
   const { cardId } = req.params;
+  const ownerId = req.user._id;
 
   return Card
     .findByIdAndDelete(cardId)
+    .orFail()
     .then((card) => {
-      if (card?._id !== undefined) {
+      if (card?._id !== undefined && card.owner.toString() === ownerId) {
         res.send({ message: ERROR_MESSAGE.CardIsDelete });
-      } else {
-        res.status(STATUS_CODE.NotFound).send({ message: ERROR_MESSAGE.CardNotFound });
       }
     })
     .catch((err) => {
       if (err.name === 'CastError') {
         res.status(STATUS_CODE.BadRequest).send({ message: ERROR_MESSAGE.IncorrectId });
+      } else if (err.name === 'DocumentNotFoundError') {
+        res.status(STATUS_CODE.NotFound).send({ message: ERROR_MESSAGE.CardNotFound });
       } else {
         res.status(STATUS_CODE.InternalServerError).send({ message: ERROR_MESSAGE.Error });
       }
@@ -99,12 +102,13 @@ export const likeCard = (req: Request, res: Response) => {
       { $addToSet: { likes: userId } },
       { new: true },
     )
+    .orFail()
     .select('createdAt likes name link owner _id') // Поля, включенные в результат ответа
     .populate('owner', 'name about avatar _id') // Отображение информации о пользователе в поле "owner" карточки
     .populate('likes', 'name about avatar _id') // Отображение информации о пользователе в поле "likes" карточки
     .then((card) => {
       if (card?._id !== undefined) {
-        return res.send({
+        res.send({
           createdAt: card?.createdAt,
           likes: card.likes?.map((like: any) => ({
             name: like.name,
@@ -118,11 +122,12 @@ export const likeCard = (req: Request, res: Response) => {
           _id: card?._id,
         });
       }
-      return res.status(STATUS_CODE.NotFound).send({ message: ERROR_MESSAGE.CardNotFound });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
         res.status(STATUS_CODE.BadRequest).send({ message: ERROR_MESSAGE.IncorrectId });
+      } else if (err.name === 'DocumentNotFoundError') {
+        res.status(STATUS_CODE.NotFound).send({ message: ERROR_MESSAGE.CardNotFound });
       } else {
         res.status(STATUS_CODE.InternalServerError).send({ message: ERROR_MESSAGE.Error });
       }
@@ -140,9 +145,10 @@ export const dislikeCard = (req: Request, res: Response) => {
       { $pull: { likes: userId } },
       { new: true },
     )
+    .orFail()
     .then((card) => {
       if (card?._id !== undefined) {
-        return Card
+        Card
           .findById(card?._id)
           .select('createdAt likes name link owner _id') // Поля, включенные в результат ответа
           .populate('owner', 'name about avatar _id') // Отображение информации о пользователе в поле "owner" карточки
@@ -158,11 +164,12 @@ export const dislikeCard = (req: Request, res: Response) => {
             return res.send(response);
           });
       }
-      return res.status(STATUS_CODE.NotFound).send({ message: ERROR_MESSAGE.CardNotFound });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
         res.status(STATUS_CODE.BadRequest).send({ message: ERROR_MESSAGE.IncorrectId });
+      } else if (err.name === 'DocumentNotFoundError') {
+        res.status(STATUS_CODE.NotFound).send({ message: ERROR_MESSAGE.CardNotFound });
       } else {
         res.status(STATUS_CODE.InternalServerError).send({ message: ERROR_MESSAGE.Error });
       }

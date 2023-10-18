@@ -26,22 +26,21 @@ export const getUser = (req: Request, res: Response) => {
 
   return User
     .findById(userId)
+    .orFail()
     .select('name about avatar _id') // Поля, включенные в результат ответа
     .then((user) => {
-      if (!user) {
-        res.status(STATUS_CODE.NotFound).send({ message: ERROR_MESSAGE.UserNotFound });
-      } else {
-        res.send({
-          name: user?.name,
-          about: user?.about,
-          avatar: user?.avatar,
-          _id: user?._id,
-        });
-      }
+      res.send({
+        name: user?.name,
+        about: user?.about,
+        avatar: user?.avatar,
+        _id: user?._id,
+      });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
         res.status(STATUS_CODE.BadRequest).send({ message: ERROR_MESSAGE.IncorrectId });
+      } else if (err.name === 'DocumentNotFoundError') {
+        res.status(STATUS_CODE.NotFound).send({ message: ERROR_MESSAGE.UserNotFound });
       } else {
         res.status(STATUS_CODE.InternalServerError).send({ message: ERROR_MESSAGE.Error });
       }
@@ -71,22 +70,21 @@ export const updateUserInfo = (req: Request, res: Response) => {
 
   return User
     .findByIdAndUpdate(userId, { name, about }, { new: true, runValidators: true })
+    .orFail()
     .select('name about avatar _id') // Поля, включенные в результат ответа
     .then((user) => {
-      if (!user) {
-        res.status(STATUS_CODE.NotFound).send({ message: ERROR_MESSAGE.UserNotFound });
-      } else {
-        res.send({
-          name: user?.name,
-          about: user?.about,
-          avatar: user?.avatar,
-          _id: user?._id,
-        });
-      }
+      res.send({
+        name: user?.name,
+        about: user?.about,
+        avatar: user?.avatar,
+        _id: user?._id,
+      });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(STATUS_CODE.BadRequest).send({ message: err.message });
+      } else if (err.name === 'DocumentNotFoundError') {
+        res.status(STATUS_CODE.NotFound).send({ message: ERROR_MESSAGE.UserNotFound });
       } else {
         res.status(STATUS_CODE.InternalServerError).send({ message: err.message });
       }
@@ -100,22 +98,21 @@ export const updateUserAvatar = (req: Request, res: Response) => {
 
   return User
     .findByIdAndUpdate(userId, { avatar }, { new: true, runValidators: true })
+    .orFail()
     .select('name about avatar _id') // Поля, включенные в результат ответа
     .then((user) => {
-      if (!user) {
-        res.status(STATUS_CODE.NotFound).send({ message: ERROR_MESSAGE.UserNotFound });
-      } else {
-        res.send({
-          name: user?.name,
-          about: user?.about,
-          avatar: user?.avatar,
-          _id: user?._id,
-        });
-      }
+      res.send({
+        name: user?.name,
+        about: user?.about,
+        avatar: user?.avatar,
+        _id: user?._id,
+      });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(STATUS_CODE.BadRequest).send({ message: err.message });
+      } else if (err.name === 'DocumentNotFoundError') {
+        res.status(STATUS_CODE.NotFound).send({ message: ERROR_MESSAGE.UserNotFound });
       } else {
         res.status(STATUS_CODE.InternalServerError).send({ message: err.message });
       }

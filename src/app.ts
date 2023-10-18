@@ -1,7 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
-import usersRouter from './routes/user';
-import cardsRouter from './routes/card';
+import { cardsRouter, usersRouter } from './routes';
 import { STATUS_CODE, ERROR_MESSAGE } from './utils/constants/errors';
 
 declare global {
