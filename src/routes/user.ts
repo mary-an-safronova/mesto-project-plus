@@ -1,6 +1,10 @@
 import { Router } from 'express';
 import {
-  getUsers, getUser, createUser, updateUserInfo, updateUserAvatar,
+  getUsers,
+  getUser,
+  createUser,
+  updateUserInfoController,
+  updateUserAvatarController,
 } from '../controllers/user';
 
 const router = Router();
@@ -9,7 +13,7 @@ const router = Router();
 router.get('/', getUsers);
 router.get('/:userId', getUser);
 router.post('/', createUser);
-router.patch('/me', updateUserInfo);
-router.patch('/me/avatar', updateUserAvatar);
+router.patch('/me', updateUserInfoController);
+router.patch('/me/avatar', updateUserAvatarController);
 
 export default router;
