@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import User from '../models/user';
 import { STATUS_CODE, ERROR_MESSAGE } from '../utils/constants/errors';
 
@@ -37,9 +38,9 @@ export const getUser = (req: Request, res: Response) => {
       });
     })
     .catch((err) => {
-      if (err.name === 'CastError') {
+      if (err instanceof mongoose.Error.CastError) {
         res.status(STATUS_CODE.BadRequest).send({ message: ERROR_MESSAGE.IncorrectId });
-      } else if (err.name === 'DocumentNotFoundError') {
+      } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
         res.status(STATUS_CODE.NotFound).send({ message: ERROR_MESSAGE.UserNotFound });
       } else {
         res.status(STATUS_CODE.InternalServerError).send({ message: ERROR_MESSAGE.Error });
@@ -55,7 +56,7 @@ export const createUser = (req: Request, res: Response) => {
     .create({ name, about, avatar })
     .then((user) => res.status(STATUS_CODE.Created).send(user))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err instanceof mongoose.Error.ValidationError) {
         res.status(STATUS_CODE.BadRequest).send({ message: err.message });
       } else {
         res.status(STATUS_CODE.InternalServerError).send({ message: err.message });
@@ -81,9 +82,9 @@ export const updateUserInfo = (req: Request, res: Response) => {
       });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err instanceof mongoose.Error.ValidationError) {
         res.status(STATUS_CODE.BadRequest).send({ message: err.message });
-      } else if (err.name === 'DocumentNotFoundError') {
+      } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
         res.status(STATUS_CODE.NotFound).send({ message: ERROR_MESSAGE.UserNotFound });
       } else {
         res.status(STATUS_CODE.InternalServerError).send({ message: err.message });
@@ -109,9 +110,9 @@ export const updateUserAvatar = (req: Request, res: Response) => {
       });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err instanceof mongoose.Error.ValidationError) {
         res.status(STATUS_CODE.BadRequest).send({ message: err.message });
-      } else if (err.name === 'DocumentNotFoundError') {
+      } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
         res.status(STATUS_CODE.NotFound).send({ message: ERROR_MESSAGE.UserNotFound });
       } else {
         res.status(STATUS_CODE.InternalServerError).send({ message: err.message });
