@@ -76,8 +76,10 @@ export const deleteCard = (req: Request, res: Response) => {
     .findByIdAndDelete(cardId)
     .orFail()
     .then((card) => {
-      if (card?._id !== undefined && card.owner.toString() === ownerId) {
+      if (card.owner.toString() === ownerId) {
         res.send({ message: MESSAGE.CardIsDelete });
+      } else {
+        res.status(STATUS_CODE.BadRequest).send({ message: ERROR_MESSAGE.AnotherUserCard });
       }
     })
     .catch((err) => {

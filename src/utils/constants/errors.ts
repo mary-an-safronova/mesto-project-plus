@@ -15,6 +15,7 @@ export const ERROR_MESSAGE = {
   NotFoundRoute: 'Запрошен несуществующий маршрут',
   IncorrectEmailOrPassword: 'Неправильные почта или пароль',
   AuthenticationError: 'Ошибка аутентификации',
+  AnotherUserCard: 'Нельзя удалить карточку другого пользователя',
 };
 
 export const MESSAGE = {
