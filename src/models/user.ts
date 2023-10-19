@@ -1,5 +1,8 @@
-import { Schema, model } from 'mongoose';
+import {
+  Schema, model, Model, Document,
+} from 'mongoose';
 import validator from 'validator';
+import bcrypt from 'bcrypt';
 
 export interface IUser {
   name: string;
@@ -9,8 +12,13 @@ export interface IUser {
   password: string;
 }
 
+interface UserModel extends Model<IUser> {
+  findUserByCredentials: (email: string, password: string) =>
+  Promise<Document<unknown, any, IUser>>
+}
+
 // Схема пользователя
-const userSchema = new Schema<IUser>({
+const userSchema = new Schema<IUser, UserModel>({
   name: {
     type: String,
     minlength: 2,
@@ -43,5 +51,24 @@ const userSchema = new Schema<IUser>({
   },
 }, { versionKey: false }); // Исключаем поле "__v"
 
+// Проверка почты и пароля
+userSchema.static('findUserByCredentials', function findUserByCredentials(email: string, password: string) {
+  return this.findOne({ email }).select('+password')
+    .then((user) => {
+      if (!user) {
+        return Promise.reject(new Error('Неправильные почта или пароль'));
+      }
+
+      return bcrypt.compare(password, user.password)
+        .then((matched) => {
+          if (!matched) {
+            return Promise.reject(new Error('Неправильные почта или пароль'));
+          }
+
+          return user;
+        });
+    });
+});
+
 // Модель пользователя
-export default model<IUser>('user', userSchema);
+export default model<IUser, UserModel>('user', userSchema);

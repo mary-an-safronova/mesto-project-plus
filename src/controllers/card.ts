@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Card from '../models/card';
-import { STATUS_CODE, ERROR_MESSAGE } from '../utils/constants/errors';
+import { STATUS_CODE, ERROR_MESSAGE, MESSAGE } from '../utils/constants/errors';
 
 // Получение всех карточек
 export const getCards = (req: Request, res: Response) => Card
@@ -77,7 +77,7 @@ export const deleteCard = (req: Request, res: Response) => {
     .orFail()
     .then((card) => {
       if (card?._id !== undefined && card.owner.toString() === ownerId) {
-        res.send({ message: ERROR_MESSAGE.CardIsDelete });
+        res.send({ message: MESSAGE.CardIsDelete });
       }
     })
     .catch((err) => {

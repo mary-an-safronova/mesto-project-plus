@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
+import jwt, { Secret } from 'jsonwebtoken';
 import User from '../models/user';
 import { STATUS_CODE, ERROR_MESSAGE } from '../utils/constants/errors';
 
@@ -121,3 +122,25 @@ const updateUserAvatar = async (req: Request, res: Response) => {
 };
 
 export const updateUserAvatarController = handleUpdateUserErrors(updateUserAvatar);
+
+// Аутентификация
+export const login = async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+  const { JWT_SECRET } = process.env;
+
+  try {
+    const user = await User.findUserByCredentials(email, password);
+    const token = jwt.sign(
+      { _id: user!._id },
+      JWT_SECRET as Secret,
+      { expiresIn: '7d' },
+    );
+
+    res.cookie('jwt', token, { httpOnly: true, maxAge: 3600000 * 24 * 7, sameSite: true });
+    // аутентификация успешна!
+    res.status(STATUS_CODE.OK).send({ user, token });
+  } catch (err) {
+    // ошибка аутентификации
+    res.status(STATUS_CODE.Unauthorized).send({ message: ERROR_MESSAGE.AuthenticationError });
+  }
+};
