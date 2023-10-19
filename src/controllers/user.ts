@@ -144,3 +144,20 @@ export const login = async (req: Request, res: Response) => {
     res.status(STATUS_CODE.Unauthorized).send({ message: ERROR_MESSAGE.AuthenticationError });
   }
 };
+
+// Получение данных текущего пользователя
+export const getCurrentUser = async (req: Request, res: Response) => {
+  try {
+    const currentUserId = req.user._id;
+
+    const user = await User.findById(currentUserId)
+      .orFail().select('name about avatar _id'); // Поля, включенные в результат ответа
+    sendUserResponse(user, res);
+  } catch (err) {
+    if (err instanceof mongoose.Error.CastError) {
+      res.status(STATUS_CODE.NotFound).send({ message: ERROR_MESSAGE.UserNotFound });
+    } else {
+      res.status(STATUS_CODE.InternalServerError).send({ message: ERROR_MESSAGE.Error });
+    }
+  }
+};
