@@ -1,11 +1,10 @@
-import express, {
-  Request, Response,
-} from 'express';
+import express, { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { cardsRouter, usersRouter } from './routes';
 import { STATUS_CODE, ERROR_MESSAGE } from './utils/constants/errors';
-import { createUser, login } from './controllers/user';
+import { createUserController, loginController } from './controllers/user';
 import auth from './middlewares/auth';
+import centralizedError from './middlewares/centralized-error';
 
 // Подключение и загрузка переменных окружения из файла .env
 require('dotenv').config();
@@ -38,8 +37,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser()); // подключаем парсер кук как мидлвар
 
 // Маршруты для обработки запросов на аутентификацию и создание пользователей
-app.post('/signin', login);
-app.post('/signup', createUser);
+app.post('/signin', loginController);
+app.post('/signup', createUserController);
 
 //  middleware, для обработки и проверки авторизации пользователя
 app.use(auth);
@@ -47,6 +46,9 @@ app.use(auth);
 // Маршруты для обработки запросов, требующих авторизацию
 app.use('/users', usersRouter);
 app.use('/cards', cardsRouter);
+
+// Middleware для централизованной обработки ошибок
+app.use(centralizedError);
 
 // Обработчик ошибки 404,
 // который будет вызван, если ни один из предыдущих маршрутов не соответствует запросу

@@ -1,179 +1,147 @@
-import { Request, Response } from 'express';
-import mongoose from 'mongoose';
+import { Request, Response, NextFunction } from 'express';
 import Card from '../models/card';
 import { STATUS_CODE, ERROR_MESSAGE, MESSAGE } from '../utils/constants/errors';
+import { cardFields, ownerFields, fields } from '../utils/constants/constants';
+
+// Функция-декоратор для обработки ошибок
+const handleCardErrors = (fn: any) => async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    await fn(req, res, next);
+  } catch (err) {
+    next(err);
+  }
+};
 
 // Получение всех карточек
-export const getCards = (req: Request, res: Response) => Card
-  .find({})
-  .select('createdAt likes name link owner _id') // Поля, включенные в результат ответа
-  .populate('owner', 'name about avatar _id') // Отображение информации о пользователе в поле "owner" карточки
-  .populate('likes', 'name about avatar _id') // Отображение информации о пользователе в поле "likes" карточки
-  .then((cards) => {
-    const updatedCards = cards.map((card: any) => {
-      const updatedCard = {
-        createdAt: card.createdAt,
-        likes: card.likes?.map((like: any) => ({
-          name: like.name,
-          about: like.about,
-          avatar: like.avatar,
-          _id: like._id,
-        })),
-        link: card.link,
-        name: card.name,
-        owner: {
-          name: card.owner.name,
-          about: card.owner.about,
-          avatar: card.owner.avatar,
-          _id: card.owner._id,
-        },
-        _id: card._id,
-      };
-      return updatedCard;
-    });
-    res.send(updatedCards);
-  })
-  .catch(() => res.status(STATUS_CODE.InternalServerError).send({ message: ERROR_MESSAGE.Error }));
+export const getCards = async (req: Request, res: Response, next: NextFunction) => {
+  const cards = await Card.find({})
+    .select(cardFields) // Поля, включенные в результат ответа
+    .populate(fields.owner, ownerFields) // Отображение инф. о пользователе в поле "owner" карточки
+    .populate(fields.likes, ownerFields); // Отображение инф. о пользователе в поле "likes" карточки
+  const updatedCards = cards.map((card: any) => {
+    const updatedCard = {
+      createdAt: card.createdAt,
+      likes: card.likes?.map((like: any) => ({
+        name: like.name,
+        about: like.about,
+        avatar: like.avatar,
+        _id: like._id,
+      })),
+      link: card.link,
+      name: card.name,
+      owner: {
+        name: card.owner.name,
+        about: card.owner.about,
+        avatar: card.owner.avatar,
+        _id: card.owner._id,
+      },
+      _id: card._id,
+    };
+    return updatedCard;
+  });
+  res.send(updatedCards);
+};
+
+export const getCardsController = handleCardErrors(getCards);
 
 // Создание новой карточки
-export const createCard = (req: Request, res: Response) => {
+export const createCard = async (req: Request, res: Response, next: NextFunction) => {
   const { name, link } = req.body;
   const userId = req.user._id;
 
-  return Card
-    .create({ name, link, owner: userId })
-    .then((card) => Card.findById(card._id)
-      .select('createdAt likes name link owner _id') // Поля, включенные в результат ответа
-      .populate('owner', 'name about avatar _id') // Отображение информации о пользователе в поле "owner" карточки
-      .then((createdCard) => {
-        const response = {
-          createdAt: createdCard?.createdAt,
-          likes: createdCard?.likes,
-          link: createdCard?.link,
-          name: createdCard?.name,
-          owner: createdCard?.owner,
-          _id: createdCard?._id,
-        };
-        res.status(STATUS_CODE.Created).send(response);
-      })
-      .catch(() => res.status(STATUS_CODE.InternalServerError)
-        .send({ message: ERROR_MESSAGE.Error })))
-    .catch((err) => {
-      if (err instanceof mongoose.Error.ValidationError) {
-        res.status(STATUS_CODE.BadRequest).send({ message: err.message });
-      } else {
-        res.status(STATUS_CODE.InternalServerError).send({ message: err.message });
-      }
-    });
+  const card = await Card.create({ name, link, owner: userId });
+  const createdCard = await Card.findById(card._id)
+    .select(cardFields) // Поля, включенные в результат ответа
+    .populate(fields.owner, ownerFields); // Отображение инф. о пользователе в поле "owner" карточки
+  const response = {
+    createdAt: createdCard?.createdAt,
+    likes: createdCard?.likes,
+    link: createdCard?.link,
+    name: createdCard?.name,
+    owner: createdCard?.owner,
+    _id: createdCard?._id,
+  };
+
+  res.status(STATUS_CODE.Created).send(response);
 };
 
+export const createCardController = handleCardErrors(createCard);
+
 // Удаление карточки
-export const deleteCard = (req: Request, res: Response) => {
+export const deleteCard = async (req: Request, res: Response, next: NextFunction) => {
   const { cardId } = req.params;
   const ownerId = req.user._id;
 
-  return Card
-    .findByIdAndDelete(cardId)
-    .orFail()
-    .then((card) => {
-      if (card.owner.toString() === ownerId) {
-        res.send({ message: MESSAGE.CardIsDelete });
-      } else {
-        res.status(STATUS_CODE.BadRequest).send({ message: ERROR_MESSAGE.AnotherUserCard });
-      }
-    })
-    .catch((err) => {
-      if (err instanceof mongoose.Error.CastError) {
-        res.status(STATUS_CODE.BadRequest).send({ message: ERROR_MESSAGE.IncorrectId });
-      } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
-        res.status(STATUS_CODE.NotFound).send({ message: ERROR_MESSAGE.CardNotFound });
-      } else {
-        res.status(STATUS_CODE.InternalServerError).send({ message: ERROR_MESSAGE.Error });
-      }
-    });
+  const card = await Card.findByIdAndDelete(cardId).orFail();
+  if (card.owner.toString() === ownerId) {
+    return res.send({ message: MESSAGE.CardIsDelete });
+  }
+  return res.status(STATUS_CODE.BadRequest).send({ message: ERROR_MESSAGE.AnotherUserCard });
 };
+
+export const deleteCardController = handleCardErrors(deleteCard);
 
 // Добавление лайка карточке
-export const likeCard = (req: Request, res: Response) => {
+export const likeCard = async (req: Request, res: Response) => {
   const { cardId } = req.params;
   const userId = req.user._id;
 
-  return Card
-    .findByIdAndUpdate(
-      cardId,
-      { $addToSet: { likes: userId } },
-      { new: true },
-    )
-    .orFail()
-    .select('createdAt likes name link owner _id') // Поля, включенные в результат ответа
-    .populate('owner', 'name about avatar _id') // Отображение информации о пользователе в поле "owner" карточки
-    .populate('likes', 'name about avatar _id') // Отображение информации о пользователе в поле "likes" карточки
-    .then((card) => {
-      if (card?._id !== undefined) {
-        res.send({
-          createdAt: card?.createdAt,
-          likes: card.likes?.map((like: any) => ({
-            name: like.name,
-            about: like.about,
-            avatar: like.avatar,
-            _id: like._id,
-          })),
-          link: card?.link,
-          name: card?.name,
-          owner: card?.owner,
-          _id: card?._id,
-        });
-      }
-    })
-    .catch((err) => {
-      if (err instanceof mongoose.Error.CastError) {
-        res.status(STATUS_CODE.BadRequest).send({ message: ERROR_MESSAGE.IncorrectId });
-      } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
-        res.status(STATUS_CODE.NotFound).send({ message: ERROR_MESSAGE.CardNotFound });
-      } else {
-        res.status(STATUS_CODE.InternalServerError).send({ message: ERROR_MESSAGE.Error });
-      }
+  const card = await Card.findByIdAndUpdate(
+    cardId,
+    { $addToSet: { likes: userId } },
+    { new: true },
+  ).orFail()
+    .select(cardFields) // Поля, включенные в результат ответа
+    .populate(fields.owner, ownerFields) // Отображение инф. о пользователе в поле "owner" карточки
+    .populate(fields.likes, ownerFields); // Отображение инф. о пользователе в поле "likes" карточки
+  if (card?._id !== undefined) {
+    res.send({
+      createdAt: card?.createdAt,
+      likes: card.likes?.map((like: any) => ({
+        name: like.name,
+        about: like.about,
+        avatar: like.avatar,
+        _id: like._id,
+      })),
+      link: card?.link,
+      name: card?.name,
+      owner: card?.owner,
+      _id: card?._id,
     });
+  }
 };
+
+export const likeCardController = handleCardErrors(likeCard);
 
 // Удаление лайка у карточки
-export const dislikeCard = (req: Request, res: Response) => {
+export const dislikeCard = async (req: Request, res: Response) => {
   const { cardId } = req.params;
   const userId = req.user._id;
 
-  return Card
-    .findByIdAndUpdate(
-      cardId,
-      { $pull: { likes: userId } },
-      { new: true },
-    )
-    .orFail()
-    .then((card) => {
-      if (card?._id !== undefined) {
-        Card
-          .findById(card?._id)
-          .select('createdAt likes name link owner _id') // Поля, включенные в результат ответа
-          .populate('owner', 'name about avatar _id') // Отображение информации о пользователе в поле "owner" карточки
-          .then((createdCard) => {
-            const response = {
-              createdAt: createdCard?.createdAt,
-              likes: createdCard?.likes,
-              link: createdCard?.link,
-              name: createdCard?.name,
-              owner: createdCard?.owner,
-              _id: createdCard?._id,
-            };
-            return res.send(response);
-          });
-      }
-    })
-    .catch((err) => {
-      if (err instanceof mongoose.Error.CastError) {
-        res.status(STATUS_CODE.BadRequest).send({ message: ERROR_MESSAGE.IncorrectId });
-      } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
-        res.status(STATUS_CODE.NotFound).send({ message: ERROR_MESSAGE.CardNotFound });
-      } else {
-        res.status(STATUS_CODE.InternalServerError).send({ message: ERROR_MESSAGE.Error });
-      }
-    });
+  const card = await Card.findByIdAndUpdate(
+    cardId,
+    { $pull: { likes: userId } },
+    { new: true },
+  ).orFail();
+  if (card?._id !== undefined) {
+    const createdCard = await Card.findById(card?._id)
+      .select(cardFields) // Поля, включенные в результат ответа
+      .populate(fields.owner, ownerFields); // Отображение инф. о пользователе в поле "owner"
+    const response = {
+      createdAt: createdCard?.createdAt,
+      likes: createdCard?.likes,
+      link: createdCard?.link,
+      name: createdCard?.name,
+      owner: createdCard?.owner,
+      _id: createdCard?._id,
+    };
+    return res.send(response);
+  }
+  return res.send();
 };
+
+export const dislikeCardController = handleCardErrors(dislikeCard);

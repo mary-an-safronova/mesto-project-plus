@@ -8,18 +8,16 @@ export const STATUS_CODE = {
 };
 
 export const ERROR_MESSAGE = {
-  UserNotFound: 'Пользователь не найден или был запрошен несуществующий маршрут',
-  CardNotFound: 'Карточка не найдена или был запрошен несуществующий маршрут',
-  IncorrectId: 'Переданы некорректные данные',
-  Error: 'Внутренняя ошибка сервера',
-  NotFoundRoute: 'Запрошен несуществующий маршрут',
-  IncorrectEmailOrPassword: 'Неправильные почта или пароль',
-  AuthenticationError: 'Ошибка аутентификации',
-  AnotherUserCard: 'Нельзя удалить карточку другого пользователя',
+  NotFound: 'Resource not found',
+  IncorrectData: 'Incorrect data',
+  Error: 'Internal server error',
+  NotFoundRoute: 'Not found route',
+  IncorrectEmailOrPassword: 'Incorrect email or password',
+  AuthenticationError: 'Invalid token',
+  AnotherUserCard: 'Cannot delete another user card',
 };
 
 export const MESSAGE = {
-  CardIsDelete: 'Карточка успешно удалена',
-  Correct: 'Успешная аутентификация',
-  NeedAutorization: 'Необходима авторизация',
+  CardIsDelete: 'Card is delete',
+  NeedAutorization: 'Need autorization',
 };

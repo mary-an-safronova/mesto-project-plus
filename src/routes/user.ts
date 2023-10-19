@@ -1,18 +1,18 @@
 import { Router } from 'express';
 import {
-  getUsers,
-  getUser,
+  getUsersController,
+  getUserController,
   updateUserInfoController,
   updateUserAvatarController,
-  getCurrentUser,
+  getCurrentUserController,
 } from '../controllers/user';
 
 const router = Router();
 
 // Роуты пользователей
-router.get('/', getUsers);
-router.get('/me', getCurrentUser);
-router.get('/:userId', getUser);
+router.get('/', getUsersController);
+router.get('/me', getCurrentUserController);
+router.get('/:userId', getUserController);
 
 router.patch('/me', updateUserInfoController);
 router.patch('/me/avatar', updateUserAvatarController);
