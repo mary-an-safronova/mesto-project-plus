@@ -5,6 +5,7 @@ import { STATUS_CODE, ERROR_MESSAGE } from './utils/constants/errors';
 import { createUserController, loginController } from './controllers/user';
 import auth from './middlewares/auth';
 import centralizedError from './middlewares/centralized-error';
+import { requestLogger, errorLogger } from './middlewares/logger';
 
 // Подключение и загрузка переменных окружения из файла .env
 require('dotenv').config();
@@ -34,7 +35,9 @@ mongoose.connect('mongodb://localhost:27017/mestodb');
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(cookieParser()); // подключаем парсер кук как мидлвар
+app.use(cookieParser()); // Подключаем парсер кук как мидлвар
+
+app.use(requestLogger); // Подключаем логер запросов
 
 // Маршруты для обработки запросов на аутентификацию и создание пользователей
 app.post('/signin', loginController);
@@ -46,6 +49,8 @@ app.use(auth);
 // Маршруты для обработки запросов, требующих авторизацию
 app.use('/users', usersRouter);
 app.use('/cards', cardsRouter);
+
+app.use(errorLogger); // Подключаем логер ошибок
 
 // Middleware для централизованной обработки ошибок
 app.use(centralizedError);
