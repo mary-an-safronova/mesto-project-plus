@@ -40,6 +40,7 @@ const userSchema = new Schema<IUser, UserModel>({
     type: String,
     required: true,
     unique: true,
+    index: true, // Создание уникального индекса для поля email
     validate: {
       validator: (value: string) => validator.isEmail(value),
       message: 'Недействительный адрес электронной почты',

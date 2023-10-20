@@ -60,11 +60,6 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
     name, about, avatar, email, password,
   } = req.body;
 
-  const userEmail = await User.findOne({ email });
-  if (userEmail) {
-    return res.status(STATUS_CODE.Conflict).send({ message: ERROR_MESSAGE.MailAlreadyExists });
-  }
-
   // Хеширование пароля
   const hashedPassword = await bcrypt.hash(password, 10);
 
