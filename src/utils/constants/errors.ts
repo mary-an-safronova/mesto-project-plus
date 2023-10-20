@@ -5,6 +5,7 @@ export const STATUS_CODE = {
   NotFound: 404,
   InternalServerError: 500,
   Unauthorized: 401,
+  Conflict: 409,
 };
 
 export const ERROR_MESSAGE = {
@@ -15,6 +16,7 @@ export const ERROR_MESSAGE = {
   IncorrectEmailOrPassword: 'Incorrect email or password',
   AuthenticationError: 'Invalid token',
   AnotherUserCard: 'Cannot delete another user card',
+  MailAlreadyExists: 'User already registered',
 };
 
 export const MESSAGE = {

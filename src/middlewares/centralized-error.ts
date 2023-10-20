@@ -26,6 +26,9 @@ export default (err: any, req: Request, res: Response, next: NextFunction) => {
   } else if (err instanceof Error) {
     statusCode = STATUS_CODE.BadRequest; // Плохой запрос
     errorMessage = ERROR_MESSAGE.IncorrectEmailOrPassword;
+  } else if (err.code === 11000) {
+    statusCode = STATUS_CODE.Conflict; // Плохой запрос
+    errorMessage = ERROR_MESSAGE.MailAlreadyExists;
   }
 
   // Отправка ответа с соответствующим статусом и сообщением об ошибке

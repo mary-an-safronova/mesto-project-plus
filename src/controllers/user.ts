@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
 import jwt, { Secret } from 'jsonwebtoken';
 import User from '../models/user';
-import { STATUS_CODE } from '../utils/constants/errors';
+import { ERROR_MESSAGE, STATUS_CODE } from '../utils/constants/errors';
 import { userFields } from '../utils/constants/constants';
 
 const sendUserResponse = (user: any, res: Response) => {
@@ -60,6 +60,11 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
     name, about, avatar, email, password,
   } = req.body;
 
+  const userEmail = await User.findOne({ email });
+  if (userEmail) {
+    return res.status(STATUS_CODE.Conflict).send({ message: ERROR_MESSAGE.MailAlreadyExists });
+  }
+
   // Хеширование пароля
   const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -70,7 +75,7 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
     email,
     password: hashedPassword,
   });
-  res.status(STATUS_CODE.Created).send(user);
+  return res.status(STATUS_CODE.Created).send(user);
 };
 
 export const createUserController = handleUserErrors(createUser);
