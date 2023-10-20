@@ -1,11 +1,13 @@
 import express, { Request, Response } from 'express';
 import mongoose from 'mongoose';
+import { errors } from 'celebrate';
 import { cardsRouter, usersRouter } from './routes';
 import { STATUS_CODE, ERROR_MESSAGE } from './utils/constants/errors';
 import { createUserController, loginController } from './controllers/user';
 import auth from './middlewares/auth';
 import centralizedError from './middlewares/centralized-error';
 import { requestLogger, errorLogger } from './middlewares/logger';
+import { validateCreateUser, validateLogin, validationErrorHandler } from './middlewares/validation';
 
 // Подключение и загрузка переменных окружения из файла .env
 require('dotenv').config();
@@ -40,8 +42,8 @@ app.use(cookieParser()); // Подключаем парсер кук как ми
 app.use(requestLogger); // Подключаем логер запросов
 
 // Маршруты для обработки запросов на аутентификацию и создание пользователей
-app.post('/signin', loginController);
-app.post('/signup', createUserController);
+app.post('/signin', validateLogin, loginController);
+app.post('/signup', validateCreateUser, createUserController);
 
 //  middleware, для обработки и проверки авторизации пользователя
 app.use(auth);
@@ -51,6 +53,10 @@ app.use('/users', usersRouter);
 app.use('/cards', cardsRouter);
 
 app.use(errorLogger); // Подключаем логер ошибок
+
+// Middleware для обработки ошибок валидации celebrate
+app.use(errors());
+app.use(validationErrorHandler);
 
 // Middleware для централизованной обработки ошибок
 app.use(centralizedError);
