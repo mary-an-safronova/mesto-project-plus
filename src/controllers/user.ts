@@ -6,6 +6,8 @@ import { STATUS_CODE, ERROR_MESSAGE } from '../utils/constants/errors';
 import { userFields } from '../utils/constants/constants';
 import { NotFoundError } from '../utils/errors';
 
+const crypto = require('node:crypto');
+
 const sendUserResponse = (user: any, res: Response) => {
   res.send({
     name: user?.name,
@@ -107,7 +109,8 @@ export const updateUserAvatarController = handleUserErrors(updateUserAvatar);
 // Аутентификация
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   const { email, password } = req.body;
-  const { JWT_SECRET } = process.env;
+  const defaultSecretKey = crypto.randomBytes(32).toString('hex');
+  const JWT_SECRET = process.env.NODE_ENV ? process.env.JWT_SECRET : defaultSecretKey;
 
   const user = await User.findUserByCredentials(email, password);
   const token = jwt.sign(
