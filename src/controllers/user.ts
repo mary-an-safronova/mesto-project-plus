@@ -2,8 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
 import jwt, { Secret } from 'jsonwebtoken';
 import User from '../models/user';
-import { STATUS_CODE } from '../utils/constants/errors';
+import { STATUS_CODE, ERROR_MESSAGE } from '../utils/constants/errors';
 import { userFields } from '../utils/constants/constants';
+import { NotFoundError } from '../utils/errors';
 
 const sendUserResponse = (user: any, res: Response) => {
   res.send({
@@ -47,7 +48,7 @@ export const getUsersController = handleUserErrors(getUsers);
 // Получение одного пользователя по id
 const getUser = async (req: Request, res: Response, next: NextFunction) => {
   const { userId } = req.params;
-  const user = await User.findById(userId).orFail()
+  const user = await User.findById(userId).orFail(new NotFoundError(ERROR_MESSAGE.NotFound))
     .select(userFields); // Поля, включенные в результат ответа
   sendUserResponse(user, res);
 };
@@ -81,7 +82,7 @@ const updateUserRequest = async (req: Request, res: Response, next: NextFunction
 
   const user = await User
     .findByIdAndUpdate(userId, fields, { new: true, runValidators: true })
-    .orFail()
+    .orFail(new NotFoundError(ERROR_MESSAGE.NotFound))
     .select(userFields); // Поля, включенные в результат ответа
 
   sendUserResponse(user, res);
@@ -126,7 +127,8 @@ const getCurrentUser = async (req: Request, res: Response, next: NextFunction) =
   const currentUserId = req.user._id;
 
   const user = await User.findById(currentUserId)
-    .orFail().select(userFields); // Поля, включенные в результат ответа
+    .orFail(new NotFoundError(ERROR_MESSAGE.NotFound))
+    .select(userFields); // Поля, включенные в результат ответа
   sendUserResponse(user, res);
 };
 

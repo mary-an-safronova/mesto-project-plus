@@ -5,6 +5,7 @@ export const STATUS_CODE = {
   NotFound: 404,
   InternalServerError: 500,
   Unauthorized: 401,
+  Forbidden: 403,
   Conflict: 409,
 };
 
