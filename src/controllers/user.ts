@@ -6,7 +6,7 @@ import { STATUS_CODE, ERROR_MESSAGE } from '../utils/constants/errors';
 import {
   userFields, defaultSecretKey, TokenMaxAge, CookieMaxAge,
 } from '../utils/constants/constants';
-import { NotFoundError } from '../utils/errors';
+import { NotFoundError, ConflictError, UnauthorizedError } from '../utils/errors';
 
 const sendUserResponse = (user: any, res: Response) => {
   res.send({
@@ -32,17 +32,23 @@ const handleUserErrors = (fn: any) => async (
 
 // Получение всех пользовтелей
 const getUsers = async (req: Request, res: Response, next: NextFunction) => {
-  const users = await User.find({}).select(userFields); // Поля, включенные в результат ответа
-  const updatedUsers = users.map((user: any) => {
-    const updatedUser = {
-      name: user?.name,
-      about: user?.about,
-      avatar: user?.avatar,
-      _id: user?._id,
-    };
-    return updatedUser;
-  });
-  res.send(updatedUsers);
+  try {
+    const users = await User.find({}).select(userFields); // Поля, включенные в результат ответа
+    const updatedUsers = users.map((user: any) => {
+      const updatedUser = {
+        name: user?.name,
+        about: user?.about,
+        avatar: user?.avatar,
+        _id: user?._id,
+      };
+      return updatedUser;
+    });
+    res.send(updatedUsers);
+  } catch (err) {
+    if (err instanceof jwt.JsonWebTokenError) {
+      throw new UnauthorizedError(ERROR_MESSAGE.AuthenticationError);
+    }
+  }
 };
 
 export const getUsersController = handleUserErrors(getUsers);
@@ -50,30 +56,44 @@ export const getUsersController = handleUserErrors(getUsers);
 // Получение одного пользователя по id
 const getUser = async (req: Request, res: Response, next: NextFunction) => {
   const { userId } = req.params;
-  const user = await User.findById(userId).orFail(new NotFoundError(ERROR_MESSAGE.NotFound))
-    .select(userFields); // Поля, включенные в результат ответа
-  sendUserResponse(user, res);
+  try {
+    const user = await User.findById(userId).orFail(new NotFoundError(ERROR_MESSAGE.NotFound))
+      .select(userFields); // Поля, включенные в результат ответа
+    sendUserResponse(user, res);
+  } catch (err) {
+    if (err instanceof jwt.JsonWebTokenError) {
+      throw new UnauthorizedError(ERROR_MESSAGE.AuthenticationError);
+    }
+  }
 };
 
 export const getUserController = handleUserErrors(getUser);
 
 // Создание нового пользователя
 const createUser = async (req: Request, res: Response, next: NextFunction) => {
-  const {
-    name, about, avatar, email, password,
-  } = req.body;
+  try {
+    const {
+      name, about, avatar, email, password,
+    } = req.body;
 
-  // Хеширование пароля
-  const hashedPassword = await bcrypt.hash(password, 10);
+    // Хеширование пароля
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-  const user = await User.create({
-    name,
-    about,
-    avatar,
-    email,
-    password: hashedPassword,
-  });
-  return res.status(STATUS_CODE.Created).send(user);
+    const user = await User.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hashedPassword,
+    });
+
+    return res.status(STATUS_CODE.Created).send(user);
+  } catch (err: any) {
+    if (err.code === 11000) {
+      throw new ConflictError(ERROR_MESSAGE.MailAlreadyExists);
+    }
+    return next(err);
+  }
 };
 
 export const createUserController = handleUserErrors(createUser);
@@ -92,16 +112,28 @@ const updateUserRequest = async (req: Request, res: Response, next: NextFunction
 
 // Изменение значений полей name и about пользователя
 const updateUserInfo = async (req: Request, res: Response, next: NextFunction) => {
-  const { name, about } = req.body;
-  await updateUserRequest(req, res, next, { name, about });
+  try {
+    const { name, about } = req.body;
+    await updateUserRequest(req, res, next, { name, about });
+  } catch (err) {
+    if (err instanceof jwt.JsonWebTokenError) {
+      throw new UnauthorizedError(ERROR_MESSAGE.AuthenticationError);
+    }
+  }
 };
 
 export const updateUserInfoController = handleUserErrors(updateUserInfo);
 
 // Изменение значения поля avatar пользователя
 const updateUserAvatar = async (req: Request, res: Response, next: NextFunction) => {
-  const { avatar } = req.body;
-  await updateUserRequest(req, res, next, { avatar });
+  try {
+    const { avatar } = req.body;
+    await updateUserRequest(req, res, next, { avatar });
+  } catch (err) {
+    if (err instanceof jwt.JsonWebTokenError) {
+      throw new UnauthorizedError(ERROR_MESSAGE.AuthenticationError);
+    }
+  }
 };
 
 export const updateUserAvatarController = handleUserErrors(updateUserAvatar);

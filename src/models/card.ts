@@ -21,6 +21,7 @@ const cardSchema = new Schema<ICard>({
   link: {
     type: String,
     required: true,
+    trim: true,
     validate: {
       validator: (url: string) => validator.isURL(url),
       message: 'Incorrect URL',
