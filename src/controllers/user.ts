@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import jwt, { Secret } from 'jsonwebtoken';
 import User from '../models/user';
@@ -6,7 +7,9 @@ import { STATUS_CODE, ERROR_MESSAGE } from '../utils/constants/errors';
 import {
   userFields, defaultSecretKey, TokenMaxAge, CookieMaxAge,
 } from '../utils/constants/constants';
-import { NotFoundError, ConflictError, UnauthorizedError } from '../utils/errors';
+import {
+  NotFoundError, ConflictError, UnauthorizedError, BadRequestError,
+} from '../utils/errors';
 
 const sendUserResponse = (user: any, res: Response) => {
   res.send({
@@ -87,10 +90,18 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
       password: hashedPassword,
     });
 
-    return res.status(STATUS_CODE.Created).send(user);
+    return res.status(STATUS_CODE.Created).send({
+      name,
+      about,
+      avatar,
+      email,
+      _id: user._id,
+    });
   } catch (err: any) {
     if (err.code === 11000) {
       throw new ConflictError(ERROR_MESSAGE.MailAlreadyExists);
+    } else if (err instanceof mongoose.Error.ValidationError || err.name === 'SyntaxError') {
+      throw new BadRequestError(ERROR_MESSAGE.IncorrectData);
     }
     return next(err);
   }
