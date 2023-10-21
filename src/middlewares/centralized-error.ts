@@ -25,7 +25,7 @@ export default (err: any, req: Request, res: Response, next: NextFunction) => {
     statusCode = STATUS_CODE.Conflict; // Почта уже есть в базе
     errorMessage = ERROR_MESSAGE.MailAlreadyExists;
   } else if (err.message === ERROR_MESSAGE.IncorrectEmailOrPassword) {
-    statusCode = STATUS_CODE.BadRequest; // Плохой запрос
+    statusCode = STATUS_CODE.Unauthorized; // Плохой запрос
     errorMessage = ERROR_MESSAGE.IncorrectEmailOrPassword;
   }
 
