@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt, { Secret } from 'jsonwebtoken';
 import { MESSAGE, STATUS_CODE } from '../utils/constants/errors';
+import { UnauthorizedError } from '../utils/errors';
 
 export default (req: Request, res: Response, next: NextFunction) => {
   const { authorization } = req.headers;
@@ -16,7 +17,7 @@ export default (req: Request, res: Response, next: NextFunction) => {
   try {
     payload = jwt.verify(token, JWT_SECRET as Secret);
   } catch (err) {
-    return res.status(STATUS_CODE.Unauthorized).send({ message: MESSAGE.NeedAutorization });
+    throw new UnauthorizedError(MESSAGE.NeedAutorization);
   }
 
   req.user = payload; // записываем пейлоуд в объект запроса

@@ -32,5 +32,5 @@ export default (err: any, req: Request, res: Response, next: NextFunction) => {
   // Отправка ответа с соответствующим статусом и сообщением об ошибке
   res.status(statusCode).json({ error: errorMessage });
 
-  return next(); // пропускаем запрос дальше
+  next(); // пропускаем запрос дальше
 };

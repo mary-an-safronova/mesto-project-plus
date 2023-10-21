@@ -3,7 +3,8 @@ import {
 } from 'mongoose';
 import validator from 'validator';
 import bcrypt from 'bcrypt';
-import { ERROR_MESSAGE, STATUS_CODE } from '../utils/constants/errors';
+import { ERROR_MESSAGE } from '../utils/constants/errors';
+import { BadRequestError } from '../utils/errors';
 
 export interface IUser {
   name: string;
@@ -58,13 +59,13 @@ userSchema.static('findUserByCredentials', function findUserByCredentials(email:
   return this.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        return Promise.reject(new Error(ERROR_MESSAGE.IncorrectEmailOrPassword));
+        return Promise.reject(new BadRequestError(ERROR_MESSAGE.IncorrectEmailOrPassword));
       }
 
       return bcrypt.compare(password, user!.password)
         .then((matched) => {
           if (!matched) {
-            return Promise.reject(new Error(ERROR_MESSAGE.IncorrectEmailOrPassword));
+            return Promise.reject(new BadRequestError(ERROR_MESSAGE.IncorrectEmailOrPassword));
           }
 
           return user;

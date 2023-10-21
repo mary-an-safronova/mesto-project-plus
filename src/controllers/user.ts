@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
 import jwt, { Secret } from 'jsonwebtoken';
 import User from '../models/user';
-import { ERROR_MESSAGE, STATUS_CODE } from '../utils/constants/errors';
+import { STATUS_CODE } from '../utils/constants/errors';
 import { userFields } from '../utils/constants/constants';
 
 const sendUserResponse = (user: any, res: Response) => {

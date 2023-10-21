@@ -1,7 +1,7 @@
 import { celebrate, Joi, Segments } from 'celebrate';
 import { NextFunction, Request, Response } from 'express';
-import { STATUS_CODE } from '../utils/constants/errors';
 import urlRegex from '../utils/constants/validate';
+import { BadRequestError } from '../utils/errors';
 
 // Middleware для валидации данных при создании нового пользователя
 export const validateCreateUser = celebrate({
@@ -154,7 +154,7 @@ export const validationErrorHandler = (
 ) => {
   if (err.joi) {
     const errorMessage = err.details.map((detail: any) => detail.message).join(', ');
-    return res.status(STATUS_CODE.BadRequest).send({ message: errorMessage });
+    throw new BadRequestError(errorMessage);
   }
   return next(err);
 };

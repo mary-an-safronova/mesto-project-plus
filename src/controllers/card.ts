@@ -76,9 +76,11 @@ export const deleteCard = async (req: Request, res: Response, next: NextFunction
   const { cardId } = req.params;
   const ownerId = req.user._id;
 
-  const card = await Card.findByIdAndDelete(cardId).orFail();
+  const card = await Card.findById(cardId).orFail();
   if (card.owner.toString() === ownerId) {
-    return res.send({ message: MESSAGE.CardIsDelete });
+    return Card.deleteOne({ _id: cardId }).then(() => {
+      res.send({ message: MESSAGE.CardIsDelete });
+    });
   }
   return res.status(STATUS_CODE.BadRequest).send({ message: ERROR_MESSAGE.AnotherUserCard });
 };
