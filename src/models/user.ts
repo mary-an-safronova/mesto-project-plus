@@ -36,6 +36,10 @@ const userSchema = new Schema<IUser, UserModel>({
   avatar: {
     type: String,
     default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
+    validate: {
+      validator: (url: string) => validator.isURL(url),
+      message: 'Incorrect URL',
+    },
   },
   email: {
     type: String,
@@ -44,7 +48,7 @@ const userSchema = new Schema<IUser, UserModel>({
     index: true, // Создание уникального индекса для поля email
     validate: {
       validator: (value: string) => validator.isEmail(value),
-      message: 'Недействительный адрес электронной почты',
+      message: 'Incorrect email',
     },
   },
   password: {
