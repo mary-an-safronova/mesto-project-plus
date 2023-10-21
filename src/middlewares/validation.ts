@@ -36,7 +36,7 @@ export const validateCreateUser = celebrate({
       .messages({
         'any.required': 'Пароль обязательное поле',
       }),
-  }).unknown(true),
+  }),
 });
 
 // Middleware для валидации данных при обновлении информации о пользователе
@@ -52,7 +52,7 @@ export const validateUpdateUserInfo = celebrate({
         'string.min': 'Поле about должно содержать не менее {#limit} символов',
         'string.max': 'Поле about должно содержать не более {#limit} символов',
       }),
-  }).unknown(true),
+  }),
 });
 
 // Middleware для валидации данных при обновлении аватара пользователя
@@ -62,7 +62,7 @@ export const validateUpdateUserAvatar = celebrate({
       .messages({
         'string.pattern.base': 'URL поля avatar не соответствовует регулярному выражению',
       }),
-  }).unknown(true),
+  }),
 });
 
 // Middleware для валидации данных при аутентификации пользователя
@@ -77,7 +77,7 @@ export const validateLogin = celebrate({
       .messages({
         'any.required': 'Пароль обязательное поле',
       }),
-  }).unknown(true),
+  }),
 });
 
 // Middleware для валидации id при получении данных текущего пользователя
@@ -89,7 +89,7 @@ export const validateGetUser = celebrate({
         'string.length': 'Недопустимая длина идентификатора пользователя',
         'any.required': 'Идентификатор пользователя обязательное поле',
       }),
-  }).unknown(true),
+  }),
 });
 
 // Middleware для валидации данных при создании новой карточки
@@ -106,7 +106,7 @@ export const validateCreateCard = celebrate({
         'string.pattern.base': 'URL поля link не соответствовует регулярному выражению',
         'any.required': 'Поле link обязательное поле',
       }),
-  }).unknown(true),
+  }),
 });
 
 // Middleware для валидации данных при удалении новой карточки
@@ -118,7 +118,7 @@ export const validateDeleteCard = celebrate({
         'string.length': 'Недопустимая длина идентификатора карточки',
         'any.required': 'Идентификатор карточки обязательное поле',
       }),
-  }).unknown(true),
+  }),
 });
 
 // Middleware для валидации данных при лайке карточки
@@ -130,7 +130,7 @@ export const validateLikeCard = celebrate({
         'string.length': 'Недопустимая длина идентификатора карточки',
         'any.required': 'Идентификатор карточки обязательное поле',
       }),
-  }).unknown(true),
+  }),
 });
 
 // Middleware для валидации данных при лайке карточки
@@ -142,7 +142,7 @@ export const validateDislikeCard = celebrate({
         'string.length': 'Недопустимая длина идентификатора карточки',
         'any.required': 'Идентификатор карточки обязательное поле',
       }),
-  }).unknown(true),
+  }),
 });
 
 // Обработчик ошибок валидации

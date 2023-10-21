@@ -1,13 +1,14 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import { errors } from 'celebrate';
 import { cardsRouter, usersRouter } from './routes';
-import { STATUS_CODE, ERROR_MESSAGE } from './utils/constants/errors';
+import { ERROR_MESSAGE } from './utils/constants/errors';
 import { createUserController, loginController } from './controllers/user';
 import auth from './middlewares/auth';
 import centralizedError from './middlewares/centralized-error';
 import { requestLogger, errorLogger } from './middlewares/logger';
 import { validateCreateUser, validateLogin, validationErrorHandler } from './middlewares/validation';
+import { NotFoundError } from './utils/errors';
 
 // Подключение и загрузка переменных окружения из файла .env
 require('dotenv').config();
@@ -52,6 +53,12 @@ app.use(auth);
 app.use('/users', usersRouter);
 app.use('/cards', cardsRouter);
 
+// Обработчик ошибки ненайденного маршрута
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const error = new NotFoundError(ERROR_MESSAGE.NotFoundRoute);
+  next(error);
+});
+
 app.use(errorLogger); // Подключаем логер ошибок
 
 // Middleware для обработки ошибок валидации celebrate
@@ -60,12 +67,6 @@ app.use(validationErrorHandler);
 
 // Middleware для централизованной обработки ошибок
 app.use(centralizedError);
-
-// Обработчик ошибки 404,
-// который будет вызван, если ни один из предыдущих маршрутов не соответствует запросу
-app.use((req: Request, res: Response) => {
-  res.status(STATUS_CODE.NotFound).send({ message: ERROR_MESSAGE.NotFoundRoute });
-});
 
 // Запуск сервера на указанном порту
 app.listen(PORT, () => console.log(`App listening on port ${PORT}`));

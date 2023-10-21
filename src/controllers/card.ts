@@ -1,7 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
+import jwt from 'jsonwebtoken';
 import Card from '../models/card';
 import { STATUS_CODE, ERROR_MESSAGE, MESSAGE } from '../utils/constants/errors';
 import { cardFields, ownerFields, fields } from '../utils/constants/constants';
+import {
+  ForbiddenError, NotFoundError, BadRequestError, UnauthorizedError,
+} from '../utils/errors';
 
 // Функция-декоратор для обработки ошибок
 const handleCardErrors = (fn: any) => async (
@@ -11,7 +16,10 @@ const handleCardErrors = (fn: any) => async (
 ) => {
   try {
     await fn(req, res, next);
-  } catch (err) {
+  } catch (err: any) {
+    if (err instanceof jwt.JsonWebTokenError) {
+      throw new UnauthorizedError(ERROR_MESSAGE.AuthenticationError);
+    }
     next(err);
   }
 };
@@ -50,23 +58,29 @@ export const getCardsController = handleCardErrors(getCards);
 
 // Создание новой карточки
 export const createCard = async (req: Request, res: Response, next: NextFunction) => {
-  const { name, link } = req.body;
-  const userId = req.user._id;
+  try {
+    const { name, link } = req.body;
+    const userId = req.user._id;
 
-  const card = await Card.create({ name, link, owner: userId });
-  const createdCard = await Card.findById(card._id)
-    .select(cardFields) // Поля, включенные в результат ответа
-    .populate(fields.owner, ownerFields); // Отображение инф. о пользователе в поле "owner" карточки
-  const response = {
-    createdAt: createdCard?.createdAt,
-    likes: createdCard?.likes,
-    link: createdCard?.link,
-    name: createdCard?.name,
-    owner: createdCard?.owner,
-    _id: createdCard?._id,
-  };
+    const card = await Card.create({ name, link, owner: userId });
+    const createdCard = await Card.findById(card._id)
+      .select(cardFields) // Поля, включенные в результат ответа
+      .populate(fields.owner, ownerFields); // Отображение инф. о пользователе в поле "owner"
+    const response = {
+      createdAt: createdCard?.createdAt,
+      likes: createdCard?.likes,
+      link: createdCard?.link,
+      name: createdCard?.name,
+      owner: createdCard?.owner,
+      _id: createdCard?._id,
+    };
 
-  res.status(STATUS_CODE.Created).send(response);
+    res.status(STATUS_CODE.Created).send(response);
+  } catch (err) {
+    if (err instanceof mongoose.Error.ValidationError) {
+      throw new BadRequestError(ERROR_MESSAGE.IncorrectData);
+    }
+  }
 };
 
 export const createCardController = handleCardErrors(createCard);
@@ -76,13 +90,13 @@ export const deleteCard = async (req: Request, res: Response, next: NextFunction
   const { cardId } = req.params;
   const ownerId = req.user._id;
 
-  const card = await Card.findById(cardId).orFail();
+  const card = await Card.findById(cardId).orFail(new NotFoundError(ERROR_MESSAGE.NotFound));
   if (card.owner.toString() === ownerId) {
     return Card.deleteOne({ _id: cardId }).then(() => {
       res.send({ message: MESSAGE.CardIsDelete });
     });
   }
-  return res.status(STATUS_CODE.BadRequest).send({ message: ERROR_MESSAGE.AnotherUserCard });
+  throw new ForbiddenError(ERROR_MESSAGE.AnotherUserCard);
 };
 
 export const deleteCardController = handleCardErrors(deleteCard);
@@ -96,7 +110,7 @@ export const likeCard = async (req: Request, res: Response) => {
     cardId,
     { $addToSet: { likes: userId } },
     { new: true },
-  ).orFail()
+  ).orFail(new NotFoundError(ERROR_MESSAGE.NotFound))
     .select(cardFields) // Поля, включенные в результат ответа
     .populate(fields.owner, ownerFields) // Отображение инф. о пользователе в поле "owner" карточки
     .populate(fields.likes, ownerFields); // Отображение инф. о пользователе в поле "likes" карточки
@@ -128,7 +142,7 @@ export const dislikeCard = async (req: Request, res: Response) => {
     cardId,
     { $pull: { likes: userId } },
     { new: true },
-  ).orFail();
+  ).orFail(new NotFoundError(ERROR_MESSAGE.NotFound));
   if (card?._id !== undefined) {
     const createdCard = await Card.findById(card?._id)
       .select(cardFields) // Поля, включенные в результат ответа

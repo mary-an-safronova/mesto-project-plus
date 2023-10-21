@@ -4,7 +4,7 @@ import {
 import validator from 'validator';
 import bcrypt from 'bcrypt';
 import { ERROR_MESSAGE } from '../utils/constants/errors';
-import { BadRequestError } from '../utils/errors';
+import { UnauthorizedError } from '../utils/errors';
 
 export interface IUser {
   name: string;
@@ -35,21 +35,28 @@ const userSchema = new Schema<IUser, UserModel>({
   },
   avatar: {
     type: String,
+    trim: true,
     default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
+    validate: {
+      validator: (url: string) => validator.isURL(url),
+      message: 'Incorrect URL',
+    },
   },
   email: {
     type: String,
     required: true,
+    trim: true,
     unique: true,
     index: true, // Создание уникального индекса для поля email
     validate: {
       validator: (value: string) => validator.isEmail(value),
-      message: 'Недействительный адрес электронной почты',
+      message: 'Incorrect email',
     },
   },
   password: {
     type: String,
     required: true,
+    trim: true,
     select: false,
   },
 }, { versionKey: false }); // Исключаем поле "__v"
@@ -59,13 +66,13 @@ userSchema.static('findUserByCredentials', function findUserByCredentials(email:
   return this.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        return Promise.reject(new BadRequestError(ERROR_MESSAGE.IncorrectEmailOrPassword));
+        return Promise.reject(new UnauthorizedError(ERROR_MESSAGE.IncorrectEmailOrPassword));
       }
 
       return bcrypt.compare(password, user!.password)
         .then((matched) => {
           if (!matched) {
-            return Promise.reject(new BadRequestError(ERROR_MESSAGE.IncorrectEmailOrPassword));
+            return Promise.reject(new UnauthorizedError(ERROR_MESSAGE.IncorrectEmailOrPassword));
           }
 
           return user;

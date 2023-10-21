@@ -1,9 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import jwt, { Secret } from 'jsonwebtoken';
 import User from '../models/user';
-import { STATUS_CODE } from '../utils/constants/errors';
-import { userFields } from '../utils/constants/constants';
+import { STATUS_CODE, ERROR_MESSAGE } from '../utils/constants/errors';
+import {
+  userFields, defaultSecretKey, TokenMaxAge, CookieMaxAge,
+} from '../utils/constants/constants';
+import {
+  NotFoundError, ConflictError, UnauthorizedError, BadRequestError,
+} from '../utils/errors';
 
 const sendUserResponse = (user: any, res: Response) => {
   res.send({
@@ -29,17 +35,23 @@ const handleUserErrors = (fn: any) => async (
 
 // Получение всех пользовтелей
 const getUsers = async (req: Request, res: Response, next: NextFunction) => {
-  const users = await User.find({}).select(userFields); // Поля, включенные в результат ответа
-  const updatedUsers = users.map((user: any) => {
-    const updatedUser = {
-      name: user?.name,
-      about: user?.about,
-      avatar: user?.avatar,
-      _id: user?._id,
-    };
-    return updatedUser;
-  });
-  res.send(updatedUsers);
+  try {
+    const users = await User.find({}).select(userFields); // Поля, включенные в результат ответа
+    const updatedUsers = users.map((user: any) => {
+      const updatedUser = {
+        name: user?.name,
+        about: user?.about,
+        avatar: user?.avatar,
+        _id: user?._id,
+      };
+      return updatedUser;
+    });
+    res.send(updatedUsers);
+  } catch (err) {
+    if (err instanceof jwt.JsonWebTokenError) {
+      throw new UnauthorizedError(ERROR_MESSAGE.AuthenticationError);
+    }
+  }
 };
 
 export const getUsersController = handleUserErrors(getUsers);
@@ -47,30 +59,52 @@ export const getUsersController = handleUserErrors(getUsers);
 // Получение одного пользователя по id
 const getUser = async (req: Request, res: Response, next: NextFunction) => {
   const { userId } = req.params;
-  const user = await User.findById(userId).orFail()
-    .select(userFields); // Поля, включенные в результат ответа
-  sendUserResponse(user, res);
+  try {
+    const user = await User.findById(userId).orFail(new NotFoundError(ERROR_MESSAGE.NotFound))
+      .select(userFields); // Поля, включенные в результат ответа
+    sendUserResponse(user, res);
+  } catch (err) {
+    if (err instanceof jwt.JsonWebTokenError) {
+      throw new UnauthorizedError(ERROR_MESSAGE.AuthenticationError);
+    }
+  }
 };
 
 export const getUserController = handleUserErrors(getUser);
 
 // Создание нового пользователя
 const createUser = async (req: Request, res: Response, next: NextFunction) => {
-  const {
-    name, about, avatar, email, password,
-  } = req.body;
+  try {
+    const {
+      name, about, avatar, email, password,
+    } = req.body;
 
-  // Хеширование пароля
-  const hashedPassword = await bcrypt.hash(password, 10);
+    // Хеширование пароля
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-  const user = await User.create({
-    name,
-    about,
-    avatar,
-    email,
-    password: hashedPassword,
-  });
-  return res.status(STATUS_CODE.Created).send(user);
+    const user = await User.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hashedPassword,
+    });
+
+    return res.status(STATUS_CODE.Created).send({
+      name,
+      about,
+      avatar,
+      email,
+      _id: user._id,
+    });
+  } catch (err: any) {
+    if (err.code === 11000) {
+      throw new ConflictError(ERROR_MESSAGE.MailAlreadyExists);
+    } else if (err instanceof mongoose.Error.ValidationError || err.name === 'SyntaxError') {
+      throw new BadRequestError(ERROR_MESSAGE.IncorrectData);
+    }
+    return next(err);
+  }
 };
 
 export const createUserController = handleUserErrors(createUser);
@@ -81,7 +115,7 @@ const updateUserRequest = async (req: Request, res: Response, next: NextFunction
 
   const user = await User
     .findByIdAndUpdate(userId, fields, { new: true, runValidators: true })
-    .orFail()
+    .orFail(new NotFoundError(ERROR_MESSAGE.NotFound))
     .select(userFields); // Поля, включенные в результат ответа
 
   sendUserResponse(user, res);
@@ -89,16 +123,28 @@ const updateUserRequest = async (req: Request, res: Response, next: NextFunction
 
 // Изменение значений полей name и about пользователя
 const updateUserInfo = async (req: Request, res: Response, next: NextFunction) => {
-  const { name, about } = req.body;
-  await updateUserRequest(req, res, next, { name, about });
+  try {
+    const { name, about } = req.body;
+    await updateUserRequest(req, res, next, { name, about });
+  } catch (err) {
+    if (err instanceof jwt.JsonWebTokenError) {
+      throw new UnauthorizedError(ERROR_MESSAGE.AuthenticationError);
+    }
+  }
 };
 
 export const updateUserInfoController = handleUserErrors(updateUserInfo);
 
 // Изменение значения поля avatar пользователя
 const updateUserAvatar = async (req: Request, res: Response, next: NextFunction) => {
-  const { avatar } = req.body;
-  await updateUserRequest(req, res, next, { avatar });
+  try {
+    const { avatar } = req.body;
+    await updateUserRequest(req, res, next, { avatar });
+  } catch (err) {
+    if (err instanceof jwt.JsonWebTokenError) {
+      throw new UnauthorizedError(ERROR_MESSAGE.AuthenticationError);
+    }
+  }
 };
 
 export const updateUserAvatarController = handleUserErrors(updateUserAvatar);
@@ -106,17 +152,17 @@ export const updateUserAvatarController = handleUserErrors(updateUserAvatar);
 // Аутентификация
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   const { email, password } = req.body;
-  const { JWT_SECRET } = process.env;
+  const JWT_SECRET = process.env.NODE_ENV ? process.env.JWT_SECRET : defaultSecretKey;
 
   const user = await User.findUserByCredentials(email, password);
   const token = jwt.sign(
     { _id: user!._id },
     JWT_SECRET as Secret,
-    { expiresIn: '7d' },
+    { expiresIn: TokenMaxAge },
   );
 
-  res.cookie('jwt', token, { httpOnly: true, maxAge: 3600000 * 24 * 7, sameSite: true });
-  res.status(STATUS_CODE.OK).send({ user, token });
+  res.cookie('jwt', token, { httpOnly: true, maxAge: CookieMaxAge, sameSite: true });
+  res.status(STATUS_CODE.OK).send({ token });
 };
 
 export const loginController = handleUserErrors(login);
@@ -126,7 +172,8 @@ const getCurrentUser = async (req: Request, res: Response, next: NextFunction) =
   const currentUserId = req.user._id;
 
   const user = await User.findById(currentUserId)
-    .orFail().select(userFields); // Поля, включенные в результат ответа
+    .orFail(new NotFoundError(ERROR_MESSAGE.NotFound))
+    .select(userFields); // Поля, включенные в результат ответа
   sendUserResponse(user, res);
 };
 
