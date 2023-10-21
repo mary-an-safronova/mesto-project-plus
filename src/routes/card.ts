@@ -1,15 +1,25 @@
 import { Router } from 'express';
 import {
-  getCards, createCard, deleteCard, likeCard, dislikeCard,
+  getCardsController,
+  createCardController,
+  deleteCardController,
+  likeCardController,
+  dislikeCardController,
 } from '../controllers/card';
+import {
+  validateDislikeCard,
+  validateLikeCard,
+  validateDeleteCard,
+  validateCreateCard,
+} from '../middlewares/validation';
 
 const router = Router();
 
 // Роуты карточек
-router.get('/', getCards);
-router.post('/', createCard);
-router.delete('/:cardId', deleteCard);
-router.put('/:cardId/likes', likeCard);
-router.delete('/:cardId/likes', dislikeCard);
+router.get('/', getCardsController);
+router.post('/', validateCreateCard, createCardController);
+router.delete('/:cardId', validateDeleteCard, deleteCardController);
+router.put('/:cardId/likes', validateLikeCard, likeCardController);
+router.delete('/:cardId/likes', validateDislikeCard, dislikeCardController);
 
 export default router;
