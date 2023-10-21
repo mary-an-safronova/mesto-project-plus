@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import { STATUS_CODE, ERROR_MESSAGE } from '../utils/constants/errors';
-import { NotFoundError, ForbiddenError } from '../utils/errors';
+import { NotFoundError, ForbiddenError, UnauthorizedError } from '../utils/errors';
 
 // Middleware для централизованной обработки ошибок
 export default (err: any, req: Request, res: Response, next: NextFunction) => {
@@ -22,10 +22,9 @@ export default (err: any, req: Request, res: Response, next: NextFunction) => {
   } else if (err.code === 11000) {
     statusCode = STATUS_CODE.Conflict; // Почта уже есть в базе
     errorMessage = ERROR_MESSAGE.MailAlreadyExists;
-  } else if (err.message === ERROR_MESSAGE.IncorrectEmailOrPassword) {
-    statusCode = STATUS_CODE.Unauthorized; // Неавторизован
-    errorMessage = ERROR_MESSAGE.IncorrectEmailOrPassword;
-  } else if (err instanceof NotFoundError || err instanceof ForbiddenError) {
+  } else if (err instanceof NotFoundError
+    || err instanceof ForbiddenError
+    || err instanceof UnauthorizedError) {
     statusCode = err.statusCode;
     errorMessage = err.message;
   }

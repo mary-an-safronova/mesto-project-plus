@@ -1,17 +1,17 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt, { Secret } from 'jsonwebtoken';
-import { MESSAGE, STATUS_CODE } from '../utils/constants/errors';
+import { defaultSecretKey } from '../utils/constants/constants';
+import { MESSAGE } from '../utils/constants/errors';
 import { UnauthorizedError } from '../utils/errors';
 
 export default (req: Request, res: Response, next: NextFunction) => {
-  const { authorization } = req.headers;
-  const { JWT_SECRET } = process.env;
+  const token = req.cookies.jwt; // Извлечение токена из куки
+  const JWT_SECRET = process.env.NODE_ENV ? process.env.JWT_SECRET : defaultSecretKey;
 
-  if (!authorization || !authorization.startsWith('Bearer ')) {
-    return res.status(STATUS_CODE.Unauthorized).send({ message: MESSAGE.NeedAutorization });
+  if (!token) {
+    throw new UnauthorizedError(MESSAGE.NeedAutorization);
   }
 
-  const token = authorization.replace('Bearer ', '');
   let payload: any;
 
   try {

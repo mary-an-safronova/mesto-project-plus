@@ -2,7 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import { errors } from 'celebrate';
 import { cardsRouter, usersRouter } from './routes';
-import { STATUS_CODE, ERROR_MESSAGE } from './utils/constants/errors';
+import { ERROR_MESSAGE } from './utils/constants/errors';
 import { createUserController, loginController } from './controllers/user';
 import auth from './middlewares/auth';
 import centralizedError from './middlewares/centralized-error';

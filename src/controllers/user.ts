@@ -3,10 +3,10 @@ import bcrypt from 'bcrypt';
 import jwt, { Secret } from 'jsonwebtoken';
 import User from '../models/user';
 import { STATUS_CODE, ERROR_MESSAGE } from '../utils/constants/errors';
-import { userFields } from '../utils/constants/constants';
+import {
+  userFields, defaultSecretKey, TokenMaxAge, CookieMaxAge,
+} from '../utils/constants/constants';
 import { NotFoundError } from '../utils/errors';
-
-const crypto = require('node:crypto');
 
 const sendUserResponse = (user: any, res: Response) => {
   res.send({
@@ -109,18 +109,17 @@ export const updateUserAvatarController = handleUserErrors(updateUserAvatar);
 // Аутентификация
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   const { email, password } = req.body;
-  const defaultSecretKey = crypto.randomBytes(32).toString('hex');
   const JWT_SECRET = process.env.NODE_ENV ? process.env.JWT_SECRET : defaultSecretKey;
 
   const user = await User.findUserByCredentials(email, password);
   const token = jwt.sign(
     { _id: user!._id },
     JWT_SECRET as Secret,
-    { expiresIn: '7d' },
+    { expiresIn: TokenMaxAge },
   );
 
-  res.cookie('jwt', token, { httpOnly: true, maxAge: 3600000 * 24 * 7, sameSite: true });
-  res.status(STATUS_CODE.OK).send({ user, token });
+  res.cookie('jwt', token, { httpOnly: true, maxAge: CookieMaxAge, sameSite: true });
+  res.status(STATUS_CODE.OK).send({ token });
 };
 
 export const loginController = handleUserErrors(login);
