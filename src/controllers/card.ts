@@ -73,6 +73,8 @@ export const createCard = async (req: Request, res: Response, next: NextFunction
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError) {
       next(new BadRequestError(ERROR_MESSAGE.IncorrectData));
+    } else {
+      next(err);
     }
   }
 };
