@@ -7,9 +7,7 @@ import { STATUS_CODE, ERROR_MESSAGE } from '../utils/constants/errors';
 import {
   userFields, defaultSecretKey, TokenMaxAge, CookieMaxAge,
 } from '../utils/constants/constants';
-import {
-  NotFoundError, ConflictError, UnauthorizedError, BadRequestError,
-} from '../utils/errors';
+import { NotFoundError, ConflictError, BadRequestError } from '../utils/errors';
 
 const sendUserResponse = (user: any, res: Response) => {
   res.send({
@@ -35,23 +33,17 @@ const handleUserErrors = (fn: any) => async (
 
 // Получение всех пользовтелей
 const getUsers = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const users = await User.find({}).select(userFields); // Поля, включенные в результат ответа
-    const updatedUsers = users.map((user: any) => {
-      const updatedUser = {
-        name: user?.name,
-        about: user?.about,
-        avatar: user?.avatar,
-        _id: user?._id,
-      };
-      return updatedUser;
-    });
-    res.send(updatedUsers);
-  } catch (err) {
-    if (err instanceof jwt.JsonWebTokenError) {
-      throw new UnauthorizedError(ERROR_MESSAGE.AuthenticationError);
-    }
-  }
+  const users = await User.find({}).select(userFields); // Поля, включенные в результат ответа
+  const updatedUsers = users.map((user: any) => {
+    const updatedUser = {
+      name: user?.name,
+      about: user?.about,
+      avatar: user?.avatar,
+      _id: user?._id,
+    };
+    return updatedUser;
+  });
+  res.send(updatedUsers);
 };
 
 export const getUsersController = handleUserErrors(getUsers);
@@ -59,15 +51,9 @@ export const getUsersController = handleUserErrors(getUsers);
 // Получение одного пользователя по id
 const getUser = async (req: Request, res: Response, next: NextFunction) => {
   const { userId } = req.params;
-  try {
-    const user = await User.findById(userId).orFail(new NotFoundError(ERROR_MESSAGE.NotFound))
-      .select(userFields); // Поля, включенные в результат ответа
-    sendUserResponse(user, res);
-  } catch (err) {
-    if (err instanceof jwt.JsonWebTokenError) {
-      throw new UnauthorizedError(ERROR_MESSAGE.AuthenticationError);
-    }
-  }
+  const user = await User.findById(userId).orFail(new NotFoundError(ERROR_MESSAGE.NotFound))
+    .select(userFields); // Поля, включенные в результат ответа
+  sendUserResponse(user, res);
 };
 
 export const getUserController = handleUserErrors(getUser);
@@ -99,9 +85,9 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
     });
   } catch (err: any) {
     if (err.code === 11000) {
-      throw new ConflictError(ERROR_MESSAGE.MailAlreadyExists);
-    } else if (err instanceof mongoose.Error.ValidationError || err.name === 'SyntaxError') {
-      throw new BadRequestError(ERROR_MESSAGE.IncorrectData);
+      next(new ConflictError(ERROR_MESSAGE.MailAlreadyExists));
+    } else if (err instanceof mongoose.Error.ValidationError) {
+      next(new BadRequestError(ERROR_MESSAGE.IncorrectData));
     }
     return next(err);
   }
@@ -127,8 +113,8 @@ const updateUserInfo = async (req: Request, res: Response, next: NextFunction) =
     const { name, about } = req.body;
     await updateUserRequest(req, res, next, { name, about });
   } catch (err) {
-    if (err instanceof jwt.JsonWebTokenError) {
-      throw new UnauthorizedError(ERROR_MESSAGE.AuthenticationError);
+    if (err instanceof mongoose.Error.ValidationError) {
+      next(new BadRequestError(ERROR_MESSAGE.IncorrectData));
     }
   }
 };
@@ -141,8 +127,8 @@ const updateUserAvatar = async (req: Request, res: Response, next: NextFunction)
     const { avatar } = req.body;
     await updateUserRequest(req, res, next, { avatar });
   } catch (err) {
-    if (err instanceof jwt.JsonWebTokenError) {
-      throw new UnauthorizedError(ERROR_MESSAGE.AuthenticationError);
+    if (err instanceof mongoose.Error.ValidationError) {
+      next(new BadRequestError(ERROR_MESSAGE.IncorrectData));
     }
   }
 };

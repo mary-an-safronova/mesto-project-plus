@@ -154,7 +154,7 @@ export const validationErrorHandler = (
 ) => {
   if (err.joi) {
     const errorMessage = err.details.map((detail: any) => detail.message).join(', ');
-    throw new BadRequestError(errorMessage);
+    next(new BadRequestError(errorMessage));
   }
   return next(err);
 };

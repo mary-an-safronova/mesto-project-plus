@@ -1,12 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
-import jwt from 'jsonwebtoken';
 import Card from '../models/card';
 import { STATUS_CODE, ERROR_MESSAGE, MESSAGE } from '../utils/constants/errors';
 import { cardFields, ownerFields, fields } from '../utils/constants/constants';
-import {
-  ForbiddenError, NotFoundError, BadRequestError, UnauthorizedError,
-} from '../utils/errors';
+import { ForbiddenError, NotFoundError, BadRequestError } from '../utils/errors';
 
 // Функция-декоратор для обработки ошибок
 const handleCardErrors = (fn: any) => async (
@@ -16,10 +13,7 @@ const handleCardErrors = (fn: any) => async (
 ) => {
   try {
     await fn(req, res, next);
-  } catch (err: any) {
-    if (err instanceof jwt.JsonWebTokenError) {
-      throw new UnauthorizedError(ERROR_MESSAGE.AuthenticationError);
-    }
+  } catch (err) {
     next(err);
   }
 };
@@ -78,7 +72,7 @@ export const createCard = async (req: Request, res: Response, next: NextFunction
     res.status(STATUS_CODE.Created).send(response);
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError) {
-      throw new BadRequestError(ERROR_MESSAGE.IncorrectData);
+      next(new BadRequestError(ERROR_MESSAGE.IncorrectData));
     }
   }
 };
@@ -96,7 +90,7 @@ export const deleteCard = async (req: Request, res: Response, next: NextFunction
       res.send({ message: MESSAGE.CardIsDelete });
     });
   }
-  throw new ForbiddenError(ERROR_MESSAGE.AnotherUserCard);
+  return next(new ForbiddenError(ERROR_MESSAGE.AnotherUserCard));
 };
 
 export const deleteCardController = handleCardErrors(deleteCard);

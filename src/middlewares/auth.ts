@@ -9,7 +9,7 @@ export default (req: Request, res: Response, next: NextFunction) => {
   const JWT_SECRET = process.env.NODE_ENV ? process.env.JWT_SECRET : defaultSecretKey;
 
   if (!token) {
-    throw new UnauthorizedError(ERROR_MESSAGE.NeedAutorization);
+    next(new UnauthorizedError(ERROR_MESSAGE.NeedAutorization));
   }
 
   let payload: any;
@@ -17,7 +17,7 @@ export default (req: Request, res: Response, next: NextFunction) => {
   try {
     payload = jwt.verify(token, JWT_SECRET as Secret);
   } catch (err) {
-    throw new UnauthorizedError(ERROR_MESSAGE.NeedAutorization);
+    next(new UnauthorizedError(ERROR_MESSAGE.NeedAutorization));
   }
 
   req.user = payload; // записываем пейлоуд в объект запроса
