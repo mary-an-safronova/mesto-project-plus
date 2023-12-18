@@ -32,7 +32,8 @@ const { PORT = 3000 } = process.env;
 const app = express();
 
 // Подключение к базе данных MongoDB с использованием пакета mongoose
-mongoose.connect('mongodb://localhost:27017/mestodb');
+const { MONGO_HOST } = process.env;
+mongoose.connect(String(MONGO_HOST));
 
 // Middleware для обработки тела запроса в форматах JSON и URL-кодированном виде
 app.use(express.json());
